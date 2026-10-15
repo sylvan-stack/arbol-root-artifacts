@@ -5,7 +5,7 @@ status: accepted
 ---
 # Root Contract · 01 The Exchange folder
 
-The *Exchange folder* is the folder a Trunk keeps for one [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange) while it runs, such as `~/Library/Application Support/Arbol/roots/golden/exchanges/7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b/`. It is the whole interface between a running Trunk and everything else ([ARC-2](../../arbol/architecture/02-chat-exchange-across-components.md)): the Root manager reads the record in it to list what runs, the Arbol backend follows the answer in it as it arrives, and a stop or an answer to the agent's question reaches the Trunk through it. This specification states where the folder is and how it comes and goes, the record `record.json` with the Trunk's signs of life, how a Trunk watches itself, the file `events.jsonl` that holds the answer as it arrives and its size limits, the file `control`, and what a reader can tell from what it finds. It matters because version 1 held the answer still arriving and the running usage only in process memory, which a crash lost, and gave no sign of life at all, so that a silent turn looked exactly like a busy one.
+The *Exchange folder* is the folder a Trunk keeps for one [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange) while it runs, such as `~/Library/Application Support/Arbol/roots/sapling/exchanges/7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b/`. It is the whole interface between a running Trunk and everything else ([ARC-2](../../arbol/architecture/02-chat-exchange-across-components.md)): the Root manager reads the record in it to list what runs, the Arbol backend follows the answer in it as it arrives, and a stop or an answer to the agent's question reaches the Trunk through it. This specification states where the folder is and how it comes and goes, the record `record.json` with the Trunk's signs of life, how a Trunk watches itself, the file `events.jsonl` that holds the answer as it arrives and its size limits, the file `control`, and what a reader can tell from what it finds. It matters because version 1 held the answer still arriving and the running usage only in process memory, which a crash lost, and gave no sign of life at all, so that a silent turn looked exactly like a busy one.
 
 It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md#conventions). It fixes the formats that ARC-2 and [ARC-3](../../arbol/architecture/03-stuck-trunks.md) leave to this contract. Its forms are technical choices made on 15 October 2026 ([RCT-D9](#decisions) to RCT-D13). The owner answered the chapter's open questions on 15 October 2026, and the specification was accepted the same day.
 
@@ -20,7 +20,7 @@ Not covered: what the record means for acceptance, a stop, the end and settling 
 ### Where the folder is
 
 ```text
-~/Library/Application Support/Arbol/roots/golden/exchanges/
+~/Library/Application Support/Arbol/roots/sapling/exchanges/
   7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b/    one Exchange in progress; the name is its identifier
     record.json                            who runs it, its route and folder, its signs of life, its end
     events.jsonl                           the answer as it arrives, one JSON object per line
@@ -44,7 +44,7 @@ A folder named by an Exchange's identifier therefore always holds a whole record
 ```json
 {
   "rootContract": 1,
-  "root": "golden",
+  "root": "sapling",
   "exchange": "7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b",
   "chat": "c3d4e5f6-0718-4293-a4b5-c6d7e8f90a1b",
   "trunk": "trivial",
@@ -210,7 +210,7 @@ Every reader of an Exchange folder:
 ```ts
 interface ExchangeRecord {             // record.json, written by the Trunk alone and replaced whole
   rootContract: number;                // the version of this contract the record is written in, 1
-  root: string;                        // the Root's identifier, "golden"
+  root: string;                        // the Root's identifier, "sapling"
   exchange: string;                    // the Exchange's identifier, a UUID; also the folder's name
   chat: string;                        // the chat's identifier, a UUID
   trunk: string;                       // the Trunk's code name, "trivial"

@@ -22,7 +22,7 @@ Not covered: Arbol's own tables, such as Drafts, and the record of where a migra
 The layout of contract version 1 is the file `contract/1/layout.sql` in the `arbol-root` repository: `CREATE TABLE` statements with their keys and checks, and a comment on every table and column. It is not a set of models in a library: each program writes its own plain SQL against these tables. The Root's `arbol-root` Builds carry the file, and `arbol-roots` runs it with `psql` (ARC-1):
 
 ```sh
-psql --no-psqlrc --set ON_ERROR_STOP=1 --single-transaction --file layout.sql "postgresql://arbol@127.0.0.1:5432/arbol_golden"
+psql --no-psqlrc --set ON_ERROR_STOP=1 --single-transaction --file layout.sql "postgresql://arbol@127.0.0.1:5432/arbol_sapling"
 ```
 
 Every statement in it can run again (`CREATE TABLE IF NOT EXISTS`), so running the file on a database that has everything changes nothing. The whole file is in the [Interface](#interface) below.

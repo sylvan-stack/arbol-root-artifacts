@@ -5,7 +5,7 @@ status: accepted
 ---
 # Root manager · 00 The commands
 
-`arbol-root` is the program that manages the [Arbol Trunks](../../arbol/GLOSSARY.md#arbol-trunk) of one [Root](../../arbol/GLOSSARY.md#arbol-root). Each command does one thing and ends: it lists the Trunks that fit the Root, starts a Trunk for a new [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange), lists the Exchanges in progress, stops one, or has a Trunk [Build](../../arbol/GLOSSARY.md#build) *settle* an Exchange whose process is gone, which means saving what its folder holds. For example, `arbol-root --root golden list` prints every Exchange in progress in Golden Root with its heartbeat, and `arbol-root --root golden stop 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b` stops one of them. This specification states where a command takes its Root from, the commands `trunks`, `start`, `list`, `stop` and `settle` with what each prints, its exit status and its refusals, which settings the Root manager has, and how a test points it at other folders. It matters because in version 1 Arbol Root was a resident service that did three jobs at once, so restarting it touched every chat, and a chat whose turn had died stayed "running" until one of about fifteen repair scripts was run.
+`arbol-root` is the program that manages the [Arbol Trunks](../../arbol/GLOSSARY.md#arbol-trunk) of one [Root](../../arbol/GLOSSARY.md#arbol-root). Each command does one thing and ends: it lists the Trunks that fit the Root, starts a Trunk for a new [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange), lists the Exchanges in progress, stops one, or has a Trunk [Build](../../arbol/GLOSSARY.md#build) *settle* an Exchange whose process is gone, which means saving what its folder holds. For example, `arbol-root --root sapling list` prints every Exchange in progress in First Sapling with its heartbeat, and `arbol-root --root sapling stop 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b` stops one of them. This specification states where a command takes its Root from, the commands `trunks`, `start`, `list`, `stop` and `settle` with what each prints, its exit status and its refusals, which settings the Root manager has, and how a test points it at other folders. It matters because in version 1 Arbol Root was a resident service that did three jobs at once, so restarting it touched every chat, and a chat whose turn had died stayed "running" until one of about fifteen repair scripts was run.
 
 It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md). The Root manager is one party of the [Root Contract](../contract/README.md), version 1, and uses its terms: it starts Trunks as [RCT-2](../contract/02-starting-stopping-and-settling.md#how-the-root-manager-uses-a-trunk) says, reads the records of [RCT-1](../contract/01-the-exchange-folder.md) and writes stop lines into their `control` file. The owner decided on 15 October 2026 that the Root manager starts Trunks with the one command `arbol-trunk` and an exact `-v` ([RTM-D1](#decisions)). The other forms are technical choices made the same day. The owner answered the open questions on 15 October 2026, among them that a Root's settings narrow nothing, so the Root manager has no settings ([RCT-D28](../contract/00-overview.md#decisions), [RTM-D3](#decisions)), and the specification was accepted the same day.
 
@@ -19,10 +19,10 @@ Not covered: what a Build of `arbol-root` carries, its table layouts and its mig
 
 ### The Root of a command
 
-Every Build of `arbol-root` is made for one Root (BLD-0), and its launcher picks that Build. A command works on the Root that the `root` of the Build's own record `build.json` names. A program started outside any Build, as in development, needs the option `--root <root>` and reports the build number `0` (BLD-0). A Root's identifier is one lower-case word of letters and digits, such as `golden` (ARC-1); any other, such as `../golden`, is refused with `invalid_input`. The Root's folder is `~/Library/Application Support/Arbol/roots/<root>/`. When that folder holds no `root.json`, every command is refused with `unknown_root`.
+Every Build of `arbol-root` is made for one Root (BLD-0), and its launcher picks that Build. A command works on the Root that the `root` of the Build's own record `build.json` names. A program started outside any Build, as in development, needs the option `--root <root>` and reports the build number `0` (BLD-0). A Root's identifier is one lower-case word of letters and digits, such as `sapling` (ARC-1); any other, such as `../sapling`, is refused with `invalid_input`. The Root's folder is `~/Library/Application Support/Arbol/roots/<root>/`. When that folder holds no `root.json`, every command is refused with `unknown_root`.
 
 ```sh
-arbol-root --root golden list     # Golden Root's newest working Build of arbol-root lists Golden's Exchanges
+arbol-root --root sapling list     # First Sapling's newest working Build of arbol-root lists First Sapling's Exchanges
 arbol-root -v 5 list              # Build 5 of arbol-root, in the Root its record names
 ```
 
@@ -58,8 +58,8 @@ Options are written `--name value` or `--name=value`, after the command. Each co
 `arbol-root trunks [<code name>]` runs `arbol-trunk --root <root> [<code name>] list` and prints its reply unchanged. The launcher already knows which Builds fit the Root and which one `run` would start (RCT-0), so the Root manager reads no Build record itself.
 
 ```sh
-arbol-root --root golden trunks
-# {"root":"golden","rootContract":1,"trunks":[{"trunk":"trivial","default":true,"builds":[{"build":"4","status":"working","rootContracts":[1,2],"fits":true,"runnable":true,"chosen":true}]}]}
+arbol-root --root sapling trunks
+# {"root":"sapling","rootContract":1,"trunks":[{"trunk":"trivial","default":true,"builds":[{"build":"4","status":"working","rootContracts":[1,2],"fits":true,"runnable":true,"chosen":true}]}]}
 ```
 
 ### Starting a Trunk
@@ -72,9 +72,9 @@ A *request file* is the JSON file of [RCT-0](../contract/00-overview.md#what-is-
 4. When no line that is a JSON object came within 20 seconds, or the Trunk's output ended without one, it refuses with `no_answer`. It leaves the request file and the process alone. The caller learns what happened by starting the same Exchange again, which answers `"duplicate": true` when the message was accepted (RCT-2).
 
 ```sh
-arbol-root --root golden start --exchange 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b --request /…/start.json
-#   runs: arbol-trunk --root golden trivial -v 4 run --detach --exchange 7f3a2c1e-… --request /…/start.json
-# {"accepted":true,"duplicate":false,"root":"golden","exchange":"7f3a2c1e-…","chat":"c3d4e5f6-…","number":1,"trunk":"trivial","build":"4"}
+arbol-root --root sapling start --exchange 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b --request /…/start.json
+#   runs: arbol-trunk --root sapling trivial -v 4 run --detach --exchange 7f3a2c1e-… --request /…/start.json
+# {"accepted":true,"duplicate":false,"root":"sapling","exchange":"7f3a2c1e-…","chat":"c3d4e5f6-…","number":1,"trunk":"trivial","build":"4"}
 ```
 
 Decided ([RTM-D1](#decisions)): the Root manager names the exact Build it starts, so the Build it chose and the Build that runs are always the same.
@@ -96,11 +96,11 @@ Each Exchange gets a *state*, from the rows of [RCT-1](../contract/01-the-exchan
 
 ```json
 {
-  "root": "golden",
+  "root": "sapling",
   "rootBuild": "6",
   "rootPackageVersion": "1.0.0",
   "exchanges": [
-    { "root": "golden", "exchange": "7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b", "chat": "c3d4e5f6-0718-4293-a4b5-c6d7e8f90a1b",
+    { "root": "sapling", "exchange": "7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b", "chat": "c3d4e5f6-0718-4293-a4b5-c6d7e8f90a1b",
       "trunk": "trivial", "build": "4",
       "process": { "pid": 48213, "startedAt": "2026-10-15T09:30:00.000Z", "alive": true },
       "state": "running",
@@ -138,10 +138,10 @@ The Root manager reads only the record, and a Trunk removes its folder soon afte
 | `none` | There was no folder when the stop began: the Exchange had ended before, or is unknown |
 
 ```sh
-arbol-root --root golden stop 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
-# {"root":"golden","exchange":"7f3a2c1e-…","ended":"cancelled","forced":false}
-arbol-root --root golden stop --force 6e2f1a0b-3c4d-4e5f-8a6b-7c8d9e0f1a2b
-# {"root":"golden","exchange":"6e2f1a0b-…","ended":"interrupted","forced":true,"settling":{"exchange":"6e2f1a0b-…","settled":"interrupted"}}
+arbol-root --root sapling stop 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+# {"root":"sapling","exchange":"7f3a2c1e-…","ended":"cancelled","forced":false}
+arbol-root --root sapling stop --force 6e2f1a0b-3c4d-4e5f-8a6b-7c8d9e0f1a2b
+# {"root":"sapling","exchange":"6e2f1a0b-…","ended":"interrupted","forced":true,"settling":{"exchange":"6e2f1a0b-…","settled":"interrupted"}}
 ```
 
 Observed in version 1: stop ended the agent's whole process group, with a forced kill after 2 seconds and 15 seconds in total, and cancel doubled as repair: on a chat that was marked running although nothing ran, it reset the chat to idle.
@@ -164,8 +164,8 @@ Each is settled by `arbol-trunk --root <root> trivial -v <build> settle <exchang
 | `arbol-root stop` | After it ended an Exchange's processes, or found them gone |
 
 ```sh
-arbol-root --root golden settle
-# {"root":"golden","results":[{"exchange":"7f3a2c1e-…","settled":"interrupted"},{"exchange":"9b3a2c1e-…","error":{"code":"database_unavailable","message":"…"}}]}
+arbol-root --root sapling settle
+# {"root":"sapling","results":[{"exchange":"7f3a2c1e-…","settled":"interrupted"},{"exchange":"9b3a2c1e-…","error":{"code":"database_unavailable","message":"…"}}]}
 ```
 
 A Root with nothing to settle prints `"results": []` with the exit status 0. Decided ([RTM-D4](#decisions)): `list` never settles; Arbol runs `settle`.
@@ -178,7 +178,7 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 
 ### Settings
 
-The Root manager reads no settings file (RTM-D3). ARC-0 and BLD-0 gave its file, `~/.arbol/roots/<root>/arbol-root.json` (ARC-1), two jobs. The first, the default Trunk, is the Trivial Trunk in every Root ([RCT-D2](../contract/00-overview.md#decisions)). The second, narrowing which Builds may run, is gone: a Root limits nothing, and the Trunks it runs are those whose Builds list its Root Contract version, as `trunks` shows them (RCT-D28). The file is therefore not made, and its name is kept for the first setting the Root manager needs. For example, `~/.arbol/roots/golden/` holds only `arbol.json`.
+The Root manager reads no settings file (RTM-D3). ARC-0 and BLD-0 gave its file, `~/.arbol/roots/<root>/arbol-root.json` (ARC-1), two jobs. The first, the default Trunk, is the Trivial Trunk in every Root ([RCT-D2](../contract/00-overview.md#decisions)). The second, narrowing which Builds may run, is gone: a Root limits nothing, and the Trunks it runs are those whose Builds list its Root Contract version, as `trunks` shows them (RCT-D28). The file is therefore not made, and its name is kept for the first setting the Root manager needs. For example, `~/.arbol/roots/sapling/` holds only `arbol.json`.
 
 ### Tests
 
@@ -192,7 +192,7 @@ The Root manager opens no database, so a test points it only at folders, with tw
 `--root-dir` is refused without `--bin-dir`. A real Trunk finds its Root's folder and database through the home folder alone (RCT-0), so a test that named only another Root folder could still start a Trunk on the Root in use. A test therefore puts a stand-in `arbol-trunk` in the folder it names with `--bin-dir`. `--bin-dir` also serves an owner who installed the launchers elsewhere.
 
 ```sh
-"$ARBOL_BUILD_DIR/bin/arbol-root" list --root-dir /tmp/rtm-1a2b/golden --bin-dir /tmp/rtm-1a2b/bin
+"$ARBOL_BUILD_DIR/bin/arbol-root" list --root-dir /tmp/rtm-1a2b/sapling --bin-dir /tmp/rtm-1a2b/bin
 ```
 
 ## Requirements
@@ -232,7 +232,7 @@ RTM-0.7 is checked against a listing kept in the repository, to which a later Bu
 
 // arbol-root … list
 interface Listing {
-  root: string;                        // the Root's identifier, "golden"
+  root: string;                        // the Root's identifier, "sapling"
   rootBuild: string;                   // the build number of the arbol-root Build that listed, "6"; "0" outside a Build (BLD-0)
   rootPackageVersion: string;          // the package version of that Build, "1.0.0" (BLD-0)
   exchanges: ListedExchange[];
@@ -261,7 +261,7 @@ interface ListedExchange {
 
 // arbol-root … stop [--force] <exchange>
 interface StopResult {
-  root: string;                        // "golden"
+  root: string;                        // "sapling"
   exchange: string;
   ended: "completed" | "failed" | "cancelled" | "interrupted" | "saved" | "none";
   forced: boolean;                     // true: it sent the process group a signal

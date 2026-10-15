@@ -5,7 +5,7 @@ status: accepted
 ---
 # Root Contract · 02 Starting, stopping and settling
 
-This specification follows a [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange) through the hands of its Trunk. A Trunk *accepts* a message when its folder is in place and the message is in the Root's database, and says so to whoever started it; it stops when it is told to; it *ends* the Exchange by itself; and when its process is gone, a Trunk Build *settles* the Exchange, which means it saves what the folder holds. For example, `arbol-root` runs `arbol-trunk --root golden trivial -v 4 run --detach --exchange 7f3a2c1e-… --request /…/start.json`, reads the one line `{"accepted": true, …}` and returns, and the Trunk goes on alone until the end. This specification states acceptance and refusal, a repeat after a lost answer, running in the background, the process group, stop, the termination signal, the end and its causes, a Driver that falls silent, small calls, what happens while the database is away, settling, sending a message again, and how the Root manager uses all of this. It matters because in version 1 the end of a turn could be refused by another service, a failure before the agent started could leave no end at all, "stopped" was shown before anything had stopped, and a duplicate that arrived after the end started the agent a second time.
+This specification follows a [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange) through the hands of its Trunk. A Trunk *accepts* a message when its folder is in place and the message is in the Root's database, and says so to whoever started it; it stops when it is told to; it *ends* the Exchange by itself; and when its process is gone, a Trunk Build *settles* the Exchange, which means it saves what the folder holds. For example, `arbol-root` runs `arbol-trunk --root sapling trivial -v 4 run --detach --exchange 7f3a2c1e-… --request /…/start.json`, reads the one line `{"accepted": true, …}` and returns, and the Trunk goes on alone until the end. This specification states acceptance and refusal, a repeat after a lost answer, running in the background, the process group, stop, the termination signal, the end and its causes, a Driver that falls silent, small calls, what happens while the database is away, settling, sending a message again, and how the Root manager uses all of this. It matters because in version 1 the end of a turn could be refused by another service, a failure before the agent started could leave no end at all, "stopped" was shown before anything had stopped, and a duplicate that arrived after the end started the agent a second time.
 
 It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md#conventions). It makes exact what [ARC-2](../../arbol/architecture/02-chat-exchange-across-components.md) and [ARC-3](../../arbol/architecture/03-stuck-trunks.md) say of these steps, and carries the rules of ARC-3 and [ARC-0](../../arbol/architecture/00-components-and-boundaries.md#small-model-calls) for a silent Driver and for small calls. The owner decided on 15 October 2026 what sending a message again does ([RCT-D15](#decisions)); the other forms are technical choices made the same day. The owner answered the open questions on 15 October 2026, that the replaced answer is deleted (RCT-D16) and that telling a silent Driver from a command left in the background is left to future Trunks (RCT-D30), and the specification was accepted the same day.
 
@@ -27,7 +27,7 @@ Not covered: the files of the folder ([RCT-1](01-the-exchange-folder.md)); the r
 6. It writes one line on standard output, the *acceptance line*:
 
 ```json
-{"accepted":true,"duplicate":false,"root":"golden","exchange":"2d4f6a8c-1b3e-4c5d-8e7f-9a0b1c2d3e4f","chat":"c3d4e5f6-0718-4293-a4b5-c6d7e8f90a1b","number":2,"trunk":"trivial","build":"4"}
+{"accepted":true,"duplicate":false,"root":"sapling","exchange":"2d4f6a8c-1b3e-4c5d-8e7f-9a0b1c2d3e4f","chat":"c3d4e5f6-0718-4293-a4b5-c6d7e8f90a1b","number":2,"trunk":"trivial","build":"4"}
 ```
 
 From that line on, the Exchange is the Trunk's ([ARC-2](../../arbol/architecture/02-chat-exchange-across-components.md)). The Trunk answers within 15 seconds of its start, accepted or refused. All its work with the database for the acceptance, the lookup of step 2 included, ends within 10 seconds of its start; what is still outstanding then is refused with `database_unavailable` ([RCT-D19](#decisions)).
@@ -84,7 +84,7 @@ Without `--detach`, for use by hand, the Trunk stays where it was started. After
 
 ```sh
 cd ~/repos/shop && arbol-trunk run "What does build.sh do?"
-# {"accepted":true,"duplicate":false,"root":"golden","exchange":"…","chat":"…","number":1,"trunk":"trivial","build":"4"}
+# {"accepted":true,"duplicate":false,"root":"sapling","exchange":"…","chat":"…","number":1,"trunk":"trivial","build":"4"}
 # {"n":1,"event":{"runId":"…","seq":1,"type":"started",…}}
 # …
 # {"n":9,"end":{"state":"completed","at":"2026-10-15T09:30:11.050Z"}}
@@ -188,7 +188,7 @@ For example, while the database server restarts for 20 seconds in the middle of 
 *Settling* saves what the folder of an Exchange holds once its process is gone. It is the command `settle` of a Trunk Build:
 
 ```sh
-arbol-trunk --root golden trivial -v 4 settle 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+arbol-trunk --root sapling trivial -v 4 settle 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
 # {"exchange":"7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b","settled":"interrupted"}
 ```
 
@@ -207,7 +207,7 @@ Settling changes no Exchange that has ended, and it can run twice: the second fi
 The Leather Bag can send the message of a chat's last Exchange again, once that Exchange has ended, for example after a failure or a rate limit. The previous answer and its tool calls are discarded, and everything runs again from the same message ([RCT-D15](#decisions)).
 
 ```sh
-arbol-trunk --root golden trivial -v 4 run --detach --replaces 2d4f6a8c-1b3e-4c5d-8e7f-9a0b1c2d3e4f --exchange 9b3a2c1e-5c6d-4f70-9a1b-2c3d4e5f6a7b --request /…/start.json
+arbol-trunk --root sapling trivial -v 4 run --detach --replaces 2d4f6a8c-1b3e-4c5d-8e7f-9a0b1c2d3e4f --exchange 9b3a2c1e-5c6d-4f70-9a1b-2c3d4e5f6a7b --request /…/start.json
 ```
 
 | | |
@@ -281,7 +281,7 @@ Arbol:
 interface Accepted {
   accepted: true;
   duplicate: boolean;                  // true: this Exchange was accepted before, and nothing was started now
-  root: string;                        // "golden"
+  root: string;                        // "sapling"
   exchange: string;                    // a UUID
   chat: string;                        // a UUID
   number: number;                      // the Exchange's place in its chat, 2

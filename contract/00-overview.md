@@ -21,7 +21,7 @@ Not covered: the folder of an Exchange ([RCT-1](01-the-exchange-folder.md)); acc
 
 | | |
 |---|---|
-| A Root | A named environment such as Golden Root, with the identifier `golden` ([ARC-1](../../arbol/architecture/01-roots.md)). Its folder, `~/Library/Application Support/Arbol/roots/golden/`, holds its record `root.json` and the folder `exchanges/`. Its database is `arbol_golden`. Its record names the one version of this contract it uses |
+| A Root | A named environment such as First Sapling, with the identifier `sapling` ([ARC-1](../../arbol/architecture/01-roots.md)). Its folder, `~/Library/Application Support/Arbol/roots/sapling/`, holds its record `root.json` and the folder `exchanges/`. Its database is `arbol_sapling`. Its record names the one version of this contract it uses |
 | A Trunk | A program that runs one Chat Exchange in one process, from the accepted message to its end, and writes the chat tables. Each has a *code name*, such as `trivial` |
 | The Root manager | `arbol-root`, whose Builds are made for one Root. It starts Trunks, lists the Exchanges in progress from their folders, stops them, and has a Trunk Build settle an Exchange whose process is gone. It never opens the database (ARC-0). Its Builds carry the `layout.sql` of the Root's contract version ([RCT-3](03-the-chat-tables.md)), beside the Root's own layout for Arbol's tables, as `layout/chat-tables.sql` and `layout/root-tables.sql` ([RTM-1](../specs/01-builds-layouts-and-migration.md#what-a-build-carries)) |
 | The Arbol backend | The process of a Root's `arbol` Build that serves the [Leather Bag's](../../arbol/GLOSSARY.md#leather-bag) windows. It reads the chat tables with SQL, follows the answer that is still arriving in the folder of an Exchange, and writes the Leather Bag's answers to the agent's questions there (ARC-0) |
@@ -75,9 +75,9 @@ A Trunk Build *fits* a Root when its list holds the Root's version. A Root runs 
 
 `arbol-roots create <identifier> --root-contract <version>` writes a new Root's version into its `root.json`; without the option it takes the version of the Root named with `--from`, and 1 for a Root that grows from none. No command changes it afterwards. `arbol-roots ready` marks a Root working only while a working Build of `trivial` fits it, so the default Trunk works in every working Root. Pruning keeps, for every version a retained Root uses, the newest working Build of each Trunk that fits it (BLD-0).
 
-For example, Golden Root and Frodo Root use version 1, and a later Root, Elm, uses version 2:
+For example, First Sapling and Frodo Root use version 1, and a later Root, Elm, uses version 2:
 
-| Build of `trivial` | `rootContracts` | Golden and Frodo (version 1) | Elm (version 2) |
+| Build of `trivial` | `rootContracts` | First Sapling and Frodo (version 1) | Elm (version 2) |
 |---|---|---|---|
 | 3 | `[1]` | fits | — |
 | 4 | `[1, 2]` | fits, and runs: the newest that fits | fits |
@@ -93,7 +93,7 @@ One command starts every Trunk ([RCT-D5](#decisions)):
 arbol-trunk run "What does build.sh do?"                  # the Trivial Trunk: its newest working Build that fits the current Root
 arbol-trunk advanced run "What does build.sh do?"         # the newest working Build of the Trunk advanced that fits
 arbol-trunk advanced -v 8f run "What does build.sh do?"   # Build 8f of advanced, when it fits
-arbol-trunk --root golden run "What does build.sh do?"    # in Golden Root rather than the current Root
+arbol-trunk --root sapling run "What does build.sh do?"    # in First Sapling rather than the current Root
 arbol-trunk list                                          # every Trunk and its Builds, for the current Root
 ```
 
@@ -114,7 +114,7 @@ The launcher refuses a call, with the refusal of BLD-0 (one line `{ "error": { "
 
 ```json
 {
-  "root": "golden",
+  "root": "sapling",
   "rootContract": 1,
   "trunks": [
     { "trunk": "trivial", "default": true,
@@ -126,7 +126,7 @@ The launcher refuses a call, with the refusal of BLD-0 (one line `{ "error": { "
 }
 ```
 
-`arbol-root` starts every Trunk with the same command, always naming the Root, the Trunk, the Build and the Exchange: `arbol-trunk --root golden trivial -v 4 run --detach --exchange <id> --request <file>` ([RCT-2](02-starting-stopping-and-settling.md#how-the-root-manager-uses-a-trunk)).
+`arbol-root` starts every Trunk with the same command, always naming the Root, the Trunk, the Build and the Exchange: `arbol-trunk --root sapling trivial -v 4 run --detach --exchange <id> --request <file>` ([RCT-2](02-starting-stopping-and-settling.md#how-the-root-manager-uses-a-trunk)).
 
 ### What is handed to a Trunk
 
@@ -134,7 +134,7 @@ The command `run` hands a Trunk everything an Exchange needs. Short values are o
 
 | What | Option | Field of the request file | When it is not handed |
 |---|---|---|---|
-| The Root | `--root golden`, which the launcher always adds | — | The Build refuses with `invalid_input` |
+| The Root | `--root sapling`, which the launcher always adds | — | The Build refuses with `invalid_input` |
 | The route: the Driver, the Subscription, the model and the effort ([ARC-0](../../arbol/architecture/00-components-and-boundaries.md#brain-recipes-and-the-resolved-route)) | `--driver claude`, `--subscription anthropic`, `--model sonnet`, `--effort high` | `route` | The Trunk's own specification says what it uses, such as a setting of its own ([below](#a-trunks-own-settings)), or that it refuses the start with `invalid_input`. Arbol always hands the Driver, the Subscription and the model (ARC-0) |
 | The small-call route, for small calls such as a title (ARC-0) | — | `smallCallRoute` | The Trunk makes no small text call |
 | The working folder: where the agent works | `--cwd /Users/sam/repos/shop` | `workingFolder` | The folder the Trunk was started from ([RCT-D6](#decisions)) |
@@ -172,7 +172,7 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 
 ### How a Trunk finds its Root's folder and database
 
-1. The Root's folder is `~/Library/Application Support/Arbol/roots/<root>/`, for a Root identifier that is one lower-case word of letters and digits (ARC-1); any other, such as `../golden`, is refused with `invalid_input`. The Trunk reads `root.json` there: `database` names the Root's database and `rootContract` the version. A Root without a readable `root.json` is refused with `unknown_root`, and one whose version is not in the Build's list with `contract_mismatch`.
+1. The Root's folder is `~/Library/Application Support/Arbol/roots/<root>/`, for a Root identifier that is one lower-case word of letters and digits (ARC-1); any other, such as `../sapling`, is refused with `invalid_input`. The Trunk reads `root.json` there: `database` names the Root's database and `rootContract` the version. A Root without a readable `root.json` is refused with `unknown_root`, and one whose version is not in the Build's list with `contract_mismatch`.
 2. The address of the database server is `address` in `~/.arbol/database.json` (ARC-1): a PostgreSQL connection address whose user is the database role, such as `postgresql://arbol@127.0.0.1:5432`, or `postgresql://rct@%2Ftmp%2Frct-1a2b` for a server that listens only on a socket in the folder `/tmp/rct-1a2b`.
 3. The password is the Keychain item with the service `com.sylvan-stack.arbol.database` and, as its account, the role that the address names, read with `security find-generic-password -s com.sylvan-stack.arbol.database -a arbol -w` and given at most 2 seconds. The exit status 44 of that command means that there is no such item, and the Trunk then connects without a password. Any other failure, or no answer within 2 seconds, is refused with `database_unavailable`, and the message names the Keychain.
 4. It connects to that address and to the database that `root.json` names, which takes the place of any database the address names, with the client of [RCT-3](03-the-chat-tables.md#the-layout-is-one-file-of-sql).
@@ -249,7 +249,7 @@ interface Route {                      // as in ARC-0
 
 // arbol-trunk [--root <root>] [<code name>] list
 interface TrunkList {
-  root: string;                        // the Root's identifier, "golden"
+  root: string;                        // the Root's identifier, "sapling"
   rootContract: number;                // the version of this contract the Root uses, 1
   trunks: Array<{
     trunk: string;                     // the code name, "trivial"
