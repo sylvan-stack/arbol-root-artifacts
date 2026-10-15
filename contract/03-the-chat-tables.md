@@ -1,13 +1,13 @@
 ---
 role: authored
 spec: RCT-3
-status: review
+status: accepted
 ---
 # Root Contract · 03 The chat tables
 
 The *chat tables* are the tables of a Root's database that hold its chats: every message, every tool call with its result, the token usage of every run, and each chat's title. The Trunks write them, the Arbol backend reads them with SQL, and they look the same whichever Trunk wrote them. For example, the question "What does build.sh do?" and its answer are one row in `exchanges`, a row in `messages` for the question and one for each block of the answer, a row in `tool_calls` for the `cat build.sh` the agent ran, and a row in `runs` with the tokens it spent. This specification states the layout of contract version 1 as one file of SQL, what each table holds and which program writes which column when, how the lines of `events.jsonl` become rows, how a reader puts a chat together, what is a column and what is kept whole as `jsonb`, and why contract version 1 has no additions. It matters because version 1 kept no row for an Exchange, left the Exchange's identifier empty on the messages of an older writer so that old chats showed nothing, keyed tool calls by an identifier that is unique only within one run, and stored usage without saying which Exchange spent it.
 
-It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md#conventions). The owner decided on 15 October 2026 what a chat keeps ([RCT-D21](#decisions)) and that the layout is a plain file of SQL ([RCT-D22](#decisions)). Contract version 1 holds only what the first thin path through every part needs ([ARC-1](../../arbol/architecture/01-roots.md#what-is-built-first), ARC-D39): one message sent, its answer streamed and saved, the chat opened again, and the chat migrated into a second Root.
+It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md#conventions). The owner decided on 15 October 2026 what a chat keeps ([RCT-D21](#decisions)) and that the layout is a plain file of SQL ([RCT-D22](#decisions)). The owner answered the open questions on 15 October 2026, among them that the answer a message sent again replaces is deleted ([RCT-D16](02-starting-stopping-and-settling.md#decisions)), and the specification was accepted the same day. Contract version 1 holds only what the first thin path through every part needs ([ARC-1](../../arbol/architecture/01-roots.md#what-is-built-first), ARC-D39): one message sent, its answer streamed and saved, the chat opened again, and the chat migrated into a second Root.
 
 ## Scope
 
@@ -38,7 +38,7 @@ id                                    title                 created_at
 c3d4e5f6-0718-4293-a4b5-c6d7e8f90a1b  What build.sh does    2026-10-15 09:30:00.412+00
 ```
 
-**`exchanges`: one row for each accepted Exchange.** The Trunk writes `id`, `chat_id`, `number`, `state` = `open`, `trunk`, `build`, `route`, `small_call_route`, `working_folder` and `accepted_at` when it accepts the message, and `state`, `ended_at` and `error` when the Exchange ends. A chat has at most one open Exchange: a unique index on the open ones, and the unique number of each Exchange in its chat, turn a second message to a busy chat, and two messages to one chat at the same moment, into `chat_busy` ([RCT-2](02-starting-stopping-and-settling.md#accepting-a-message)). `replaced_by` is written once, by the Trunk that accepts the message sent again.
+**`exchanges`: one row for each accepted Exchange.** The Trunk writes `id`, `chat_id`, `number`, `state` = `open`, `trunk`, `build`, `route`, `small_call_route`, `working_folder` and `accepted_at` when it accepts the message, and `state`, `ended_at` and `error` when the Exchange ends. A chat has at most one open Exchange: a unique index on the open ones, and the unique number of each Exchange in its chat, turn a second message to a busy chat, and two messages to one chat at the same moment, into `chat_busy` ([RCT-2](02-starting-stopping-and-settling.md#accepting-a-message)). `replaced_by` is written once, by the Trunk that accepts the message sent again, which in the same transaction deletes the replaced Exchange's rows in `messages` and `tool_calls` and keeps its rows in `runs` ([RCT-2](02-starting-stopping-and-settling.md#sending-a-message-again), RCT-D16).
 
 ```text
 id        chat_id   number  state      error                         trunk    build  accepted_at  ended_at  replaced_by
@@ -57,9 +57,9 @@ id        chat_id   number  state      error                         trunk    bu
 |---|---|---|---|
 | `chats` | The Trunk that accepts the chat's first message; `title` also by Arbol | At acceptance; the title at any time | Arbol, the Trunks |
 | `exchanges` | The Trunk of the Exchange, or the Trunk Build that settles it; `replaced_by` by the Trunk that accepts the message sent again | At acceptance and at the end | Arbol, the Trunks |
-| `messages`, `tool_calls`, `runs` | The Trunk of the Exchange, or the Trunk Build that settles it | As each block, call and run is finished | Arbol, the Trunks |
+| `messages`, `tool_calls`, `runs` | The Trunk of the Exchange, or the Trunk Build that settles it; the rows in `messages` and `tool_calls` of a replaced Exchange are deleted by the Trunk that accepts the message sent again | As each block, call and run is finished; the deletion at the acceptance of the message sent again | Arbol, the Trunks |
 
-One writer for each table is the rule (ARC-D10), and the Trunks are that one writer, whichever Trunk it is: each writes only the rows of the Exchange it runs or settles. Two exceptions remain, as ARC-0 states them. The title: Arbol writes it when the Leather Bag changes it, and a Trunk that makes titles writes it under the rule of its own specification, which keeps it from replacing a title the Leather Bag wrote. And the migration script of a new Root, which fills every table once before the Root is used, writes an Exchange that was open at the time of the migration as `interrupted`, and keeps the record of where each chat came from in the table `migrated_chats` of the Root's own layout (RTM-1).
+One writer for each table is the rule (ARC-D10), and the Trunks are that one writer, whichever Trunk it is: each writes only the rows of the Exchange it runs or settles, and, when it accepts a message sent again, marks the Exchange that message replaces and deletes that Exchange's messages and tool calls. Two exceptions remain, as ARC-0 states them. The title: Arbol writes it when the Leather Bag changes it, and a Trunk that makes titles writes it under the rule of its own specification, which keeps it from replacing a title the Leather Bag wrote. And the migration script of a new Root, which fills every table once before the Root is used, writes an Exchange that was open at the time of the migration as `interrupted`, and keeps the record of where each chat came from in the table `migrated_chats` of the Root's own layout (RTM-1).
 
 ### How lines become rows
 
@@ -130,12 +130,12 @@ A Trunk:
 
 | ID | A Trunk must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-3.1 | write rows only into `chats`, `exchanges`, `messages`, `tool_calls` and `runs`, only for the Exchange it runs or settles, with SQL of its own, and create, change or remove no table, column, index or check | Changed | contract |
+| RCT-3.1 | write rows only into `chats`, `exchanges`, `messages`, `tool_calls` and `runs`, only for the Exchange it runs or settles and, when it accepts a message sent again, the Exchange that message replaces (RCT-3.4), with SQL of its own, and create, change or remove no table, column, index or check | Changed | contract |
 | RCT-3.2 | write each row by the rules of *How lines become rows* as soon as the line it comes from is in `events.jsonl`, with an insert that does nothing when the row is already there | Changed | contract |
 | RCT-3.3 | write the Leather Bag's message at position 0 exactly as it was sent, and each block of the answer exactly as the Driver's `text` event carried it, apart from the replacements of RCT-3.10 | Kept | contract |
 | RCT-3.10 | replace the character U+0000 and every half of a surrogate pair that stands alone with U+FFFD in every value it writes, and change nothing else | New | contract |
 | RCT-3.11 | try no row of the answer again that the database refused with an error of the SQLSTATE class 22 or 23, leave it out, and end an Exchange whose end is not yet written as failed with `trunk_failed`, naming the line | New | unit |
-| RCT-3.4 | change no row of an Exchange that has ended, except to set its `replaced_by` once, and delete no row | New | contract |
+| RCT-3.4 | change no row of an Exchange that has ended, except to set its `replaced_by` once, and delete no row, except the rows in `messages` and `tool_calls` of the Exchange that a message sent again replaces, deleted by the Trunk that accepts that message | New | contract |
 | RCT-3.9 | leave every replaced Exchange out of the history it sends an agent | New | contract |
 
 The layout:
@@ -207,7 +207,7 @@ COMMENT ON COLUMN exchanges.small_call_route IS 'The small-call route the Trunk 
 COMMENT ON COLUMN exchanges.working_folder IS 'The absolute folder the agent worked in, for example /Users/sam/repos/shop.';
 COMMENT ON COLUMN exchanges.accepted_at IS 'When the Trunk accepted the message.';
 COMMENT ON COLUMN exchanges.ended_at IS 'When the Exchange ended; NULL exactly while it is open. For an interrupted Exchange, the time of the last line of its events.jsonl that carries one (the at of an event or a smallRun), or accepted_at when the file had none; for an Exchange that a migration wrote as interrupted, the time of the migration snapshot (RTM-1).';
-COMMENT ON COLUMN exchanges.replaced_by IS 'When the Leather Bag sent the message again: the Exchange that runs it again. A replaced Exchange is never shown in the chat and never sent to an agent. Written once, by the Trunk that accepts the new Exchange.';
+COMMENT ON COLUMN exchanges.replaced_by IS 'When the Leather Bag sent the message again: the Exchange that runs it again. A replaced Exchange is never shown in the chat and never sent to an agent. Written once, by the Trunk that accepts the new Exchange, which in the same transaction deletes the replaced Exchange''s messages and tool calls; its runs stay, so its tokens still count.';
 
 CREATE TABLE IF NOT EXISTS messages (
   exchange_id  uuid    NOT NULL REFERENCES exchanges (id) ON DELETE RESTRICT,

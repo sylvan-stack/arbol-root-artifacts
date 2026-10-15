@@ -1,17 +1,17 @@
 ---
 role: authored
 spec: RCT-0
-status: review
+status: accepted
 ---
 # Root Contract · 00 Overview
 
 The *Root Contract* is what every [Arbol Trunk](../../arbol/GLOSSARY.md#arbol-trunk) of a [Root](../../arbol/GLOSSARY.md#arbol-root) has to do, and what the Root gives every Trunk, so that the Root manager `arbol-root` can start any Trunk and list, stop and settle any [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange), and the Arbol backend can follow and show any Exchange, without knowing which Trunk ran it. For example, `arbol-trunk run "What does build.sh do?"` starts the Trivial Trunk in the current Root: it makes a folder for the Exchange, writes the message to the Root's database, and the answer arrives first in that folder and then in the database, in a form that is the same whichever Trunk ran it. This specification states who takes part, how Trunks are named and kept, how versions of the contract make Trunk Builds and Roots fit together, the command `arbol-trunk` and how it picks a Build, what is handed to a Trunk, and how a Trunk finds its Root's folder, its database and its Drivers. It matters because in version 1 the boundary between the Root and its Trunks grew into a product of its own: an assignment handshake in ten steps, an old and a new runtime generation side by side, and a register of 21 contract questions, each with its own accepted record.
 
-It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md#conventions). The owner asked for it on 15 October 2026 (SYL-168) and decided its points the same day ([RCT-D1](#decisions) to RCT-D6); whether a Root's settings may still narrow which Builds run waits for the owner (RCT-D28). It is the contract that the architecture called the *Trunk Contract* until 15 October 2026 ([ARC-0](../../arbol/architecture/00-components-and-boundaries.md#what-any-trunk-must-offer)); the formats that [ARC-2](../../arbol/architecture/02-chat-exchange-across-components.md) and [ARC-3](../../arbol/architecture/03-stuck-trunks.md) leave to it are fixed in [RCT-1](01-the-exchange-folder.md) to [RCT-3](03-the-chat-tables.md).
+It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md#conventions). The owner asked for it on 15 October 2026 (SYL-168) and decided its points the same day ([RCT-D1](#decisions) to RCT-D6). The owner answered the open questions on 15 October 2026, among them that no setting of a Root narrows which Builds run (RCT-D28), and the specification was accepted the same day. It is the contract that the architecture called the *Trunk Contract* until 15 October 2026 ([ARC-0](../../arbol/architecture/00-components-and-boundaries.md#what-any-trunk-must-offer)); the formats that [ARC-2](../../arbol/architecture/02-chat-exchange-across-components.md) and [ARC-3](../../arbol/architecture/03-stuck-trunks.md) leave to it are fixed in [RCT-1](01-the-exchange-folder.md) to [RCT-3](03-the-chat-tables.md).
 
 ## Scope
 
-Covered: the parties, Trunks and their code names, versions and what fits together, the command `arbol-trunk` and how it picks a Build, what is handed to a Trunk, how a Trunk finds its Root's folder and database, how a Trunk starts a Driver.
+Covered: the parties, Trunks and their code names, versions and what fits together, the command `arbol-trunk` and how it picks a Build, what is handed to a Trunk, how a Trunk finds its Root's folder and database, where a Trunk keeps its own settings, how a Trunk starts a Driver.
 
 Not covered: the folder of an Exchange ([RCT-1](01-the-exchange-folder.md)); accepting, stopping, ending and settling ([RCT-2](02-starting-stopping-and-settling.md)); the chat tables ([RCT-3](03-the-chat-tables.md)); the conformance suite ([RCT-4](04-conformance.md)); when `arbol-root` lists, stops and settles, and what it prints, which belong to the [Root manager's specifications](../specs/README.md); what a Trunk does inside an Exchange, such as the history it sends the agent and whether it makes titles, which belongs to each Trunk's own specification, for the first Trunk the [Trivial Trunk's](../../arbol-trunk/trunks/trivial/specs/README.md); the Driver's run ([DRV-2](../../arbol/driver-contract/02-inference.md)); Builds and the registry ([BLD-0](../../arbol/builds/00-builds-and-versions.md)).
 
@@ -35,6 +35,7 @@ Who writes and who reads what this contract fixes:
 | Stop, and answers to the agent's questions | `control` in the Exchange's folder | The Root manager (stop), the Arbol backend (answers) | The Trunk |
 | The chat tables | The Root's database ([RCT-3](03-the-chat-tables.md)) | The Trunks; the title also by Arbol | The Arbol backend, the Trunks |
 | The table layout of the chat tables | `contract/<version>/layout.sql` in the `arbol-root` repository | By hand, in the repository | `arbol-roots`, which runs it from `layout/chat-tables.sql` of the Root's `arbol-root` Build (RTM-1) |
+| A Trunk's own settings, if it has any | `~/.arbol/arbol-trunk/<code name>.json` ([below](#a-trunks-own-settings)) | The owner | That Trunk |
 
 ### Trunks and their code names
 
@@ -105,7 +106,7 @@ Its form is `arbol-trunk [--root <root>] [<code name>] [-v <build>] <command> [<
 | `-v <build>` | That Build of the Trunk | The newest working Build of the Trunk that fits the Root |
 | `<command>` | `run` or `settle` ([RCT-2](02-starting-stopping-and-settling.md)), passed to the Build; or `list`, which the launcher answers itself | Refused |
 
-`arbol-trunk` is a launcher that `arbol-builds` writes, and it holds no Trunk code. It reads the Root's `root.json` and the Build records, picks the Build and starts its program in its own place, as every launcher does (BLD-0). It hands the Build `--root <root>` followed by the command and everything after it, unchanged, so a Build always knows its Root, also when the Root was not named. `--root` is recognised only before the code name, and a Build refuses a second one. No setting of the Root narrows which Builds may run, until the owner decides otherwise ([RCT-D28](#decisions)).
+`arbol-trunk` is a launcher that `arbol-builds` writes, and it holds no Trunk code. It reads the Root's `root.json` and the Build records, picks the Build and starts its program in its own place, as every launcher does (BLD-0). It hands the Build `--root <root>` followed by the command and everything after it, unchanged, so a Build always knows its Root, also when the Root was not named. `--root` is recognised only before the code name, and a Build refuses a second one. No setting of the Root narrows which Builds may run: the Trunks a Root runs are those whose Builds list its Root Contract version, as `arbol-trunk list` and `arbol-root trunks` show them ([RCT-D28](#decisions)).
 
 The launcher refuses a call, with the refusal of BLD-0 (one line `{ "error": { "code", "message" }, "available": [...] }` and exit status 1), for an unknown Root (`unknown_root`), an unknown Trunk (`unknown_trunk`), and a named Build that does not fit or a Trunk with no working Build that fits (`no_fit`); `available` lists the runnable Builds of that Trunk that fit. Build numbers of different Trunks are never compared (BLD-0).
 
@@ -134,7 +135,7 @@ The command `run` hands a Trunk everything an Exchange needs. Short values are o
 | What | Option | Field of the request file | When it is not handed |
 |---|---|---|---|
 | The Root | `--root golden`, which the launcher always adds | — | The Build refuses with `invalid_input` |
-| The route: the Driver, the Subscription, the model and the effort ([ARC-0](../../arbol/architecture/00-components-and-boundaries.md#brain-recipes-and-the-resolved-route)) | `--driver claude`, `--subscription anthropic`, `--model sonnet`, `--effort high` | `route` | The Trunk's own specification says what it uses. Arbol always hands the Driver, the Subscription and the model (ARC-0) |
+| The route: the Driver, the Subscription, the model and the effort ([ARC-0](../../arbol/architecture/00-components-and-boundaries.md#brain-recipes-and-the-resolved-route)) | `--driver claude`, `--subscription anthropic`, `--model sonnet`, `--effort high` | `route` | The Trunk's own specification says what it uses, such as a setting of its own ([below](#a-trunks-own-settings)), or that it refuses the start with `invalid_input`. Arbol always hands the Driver, the Subscription and the model (ARC-0) |
 | The small-call route, for small calls such as a title (ARC-0) | — | `smallCallRoute` | The Trunk makes no small text call |
 | The working folder: where the agent works | `--cwd /Users/sam/repos/shop` | `workingFolder` | The folder the Trunk was started from ([RCT-D6](#decisions)) |
 | The chat | `--chat <identifier>` | `chat` | A new chat |
@@ -178,6 +179,10 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 
 Every file of these steps is reached from the home folder; only the Keychain is the Mac's own. A test therefore gives the Trunk a home folder of its own, and the Root record, the server and the database it finds are all the test's own ([RCT-4](04-conformance.md), [RCT-D7](#decisions)).
 
+### A Trunk's own settings
+
+A Trunk that has settings of its own keeps them in one file, `~/.arbol/arbol-trunk/<code name>.json`, such as `~/.arbol/arbol-trunk/trivial.json`, as every Arbol component keeps its settings in `~/.arbol` ([DRV-0](../../arbol/driver-contract/00-overview-and-boundary.md#the-settings-file)). The owner writes it, and only that Trunk reads it. It lies outside every Root, so the Trunk's Builds read the same file in every Root, and it is reached from the home folder, so a test's home folder of its own keeps it apart ([RCT-4](04-conformance.md)). What the file holds, and what the Trunk does without it, is each Trunk's own specification; the Trivial Trunk's one setting is the Driver it uses when it is handed none ([TRV-D7](../../arbol-trunk/trunks/trivial/specs/00-the-trivial-trunk.md#decisions)).
+
 ### How a Trunk starts a Driver
 
 A Trunk starts a Driver run through the Driver's launcher, `arbol-claude-driver` or `arbol-codex-driver`, found on the search path, as `run` with `--control` and a request file (DRV-2), and `arbol-classifier` through its launcher in the same way. It may name a Driver Build with `-v`. `arbol-root` starts a Trunk with the folder of the launchers, `~/.local/bin` unless `arbol-root` is given another with `--bin-dir` (RTM-0), first on the search path, so that a Trunk started from the Arbol backend finds the same Drivers as one started from a shell, and a test can put a stand-in there instead ([RCT-4](04-conformance.md)). For example:
@@ -199,6 +204,7 @@ A Trunk:
 | RCT-0.4 | take the route, the small-call route, the working folder, the chat, the Exchange and the message from the options and the request file of `run`, an option replacing only its own field of the file, and read the request file once, before it answers | New | contract |
 | RCT-0.5 | let the agent work in the folder named with `--cwd`, or else in the folder it was started from, and refuse a folder that is not absolute or does not exist with `invalid_input` | New | contract |
 | RCT-0.6 | find its Root's database only through `root.json`, `~/.arbol/database.json` and the Keychain item `com.sylvan-stack.arbol.database`, every file reached from the home folder, connect to the address with the database that `root.json` names, and connect without a password when the Keychain has no such item | New | contract |
+| RCT-0.16 | keep its own settings, if it has any, only in the file `~/.arbol/arbol-trunk/<code name>.json`, reached from the home folder | New | unit |
 | RCT-0.15 | refuse with `database_unavailable`, naming the Keychain, when reading the Keychain item fails otherwise than with no such item or gives no answer within 2 seconds | New | unit |
 | RCT-0.14 | start a Driver only through its launcher found on the search path, as `run` with `--control` and a request file, and `arbol-classifier` only through its launcher found on the search path | New | contract |
 
@@ -227,7 +233,7 @@ The launcher `arbol-trunk`:
 interface StartRequest {               // the request file; an option given beside it replaces its field
   exchange?: string;                   // a UUID the caller chose, "7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b"; absent: the Trunk makes one
   chat?: string;                       // a UUID; one the database does not know starts a new chat with it; absent: a new chat
-  replaces?: string;                   // send again: the Exchange whose answer is set aside and whose message runs again (RCT-2)
+  replaces?: string;                   // send again: the Exchange whose answer is deleted and whose message runs again (RCT-2)
   message?: string;                    // the Leather Bag's message; absent exactly when replaces is given
   route?: Partial<Route>;              // ARC-0; Arbol always hands driver, subscription and model
   smallCallRoute?: Route;              // ARC-0; absent: the Trunk makes no small text call
@@ -313,4 +319,4 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 | RCT-D6 | In which folder does the agent work? | In the folder the Trunk is given as a parameter, or else in the folder it was started from | Decided 15 October 2026 by the owner: the proposed default. The option `--cwd`, named as a Driver names it (DRV-2), is a technical choice made the same day |
 | RCT-D7 | How does a Trunk find its Root's folder, its database and its Drivers? | From `--root` alone: `root.json` names the database and the version, `~/.arbol/database.json` the server, and the Keychain the password, with none when there is no item. Drivers and `arbol-classifier` by their launchers on the search path, which `arbol-root` sets. Every file is reached from the home folder, so a test can give the Trunk a home of its own ([RCT-D29](04-conformance.md#decisions)). The alternative: options that name the Root's folder, the settings file and each program, which every Trunk would have to take | Decided 15 October 2026, a technical choice: the proposed default |
 | RCT-D8 | Who chooses the identifiers of a chat and of an Exchange, and what are they? | The caller may choose both, and otherwise the Trunk makes them. Both are UUIDs. A caller that chose the Exchange's identifier can start again after it lost the answer, without making a second Exchange ([RCT-2](02-starting-stopping-and-settling.md#a-repeat-after-a-lost-answer)). The alternative: the Trunk always makes them, and a caller that lost the answer cannot tell whether its message was accepted | Decided 15 October 2026, a technical choice: the proposed default |
-| RCT-D28 | ARC-0 let a Root's settings narrow which Builds of a Trunk may run, until 15 October 2026. Should that come back, now that a Root runs the newest working Build whose list holds its version? | No. A Build that must not run is withdrawn with `arbol-builds withdraw`, which keeps it out of every Root. If yes: the Root manager's settings list the allowed Builds, and `arbol-trunk` used by hand ignores that list | Open |
+| RCT-D28 | ARC-0 let a Root's settings narrow which Builds of a Trunk may run, until 15 October 2026. Should that come back, now that a Root runs the newest working Build whose list holds its version? | No. A Build that must not run is withdrawn with `arbol-builds withdraw`, which keeps it out of every Root. If yes: the Root manager's settings list the allowed Builds, and `arbol-trunk` used by hand ignores that list | Decided 15 October 2026 by the owner: "Roots shouldn't limit anything explicitly. They only have list of compatible trunks". No setting narrows which Builds run: the Trunks a Root runs are those whose Builds list its Root Contract version, as `arbol-root trunks` shows them. `arbol-root` reads no settings file, and `arbol-root.json` is not made (RTM-D3) |

@@ -3,7 +3,7 @@ role: authored
 ---
 # Root manager specifications
 
-What `arbol-root` does: it manages the [Arbol Trunks](../../arbol/GLOSSARY.md#arbol-trunk) of one [Root](../../arbol/GLOSSARY.md#arbol-root). It starts a Trunk for a new [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange), lists the Exchanges in progress, stops them, and has a Trunk [Build](../../arbol/GLOSSARY.md#build) save what is left of an Exchange whose process is gone. Its Builds also carry the Root's table layouts and migration script, which `arbol-roots` runs. For example, `arbol-root --root golden list` prints every Exchange in progress in Golden Root, each with its heartbeat. The architecture says where the component stands ([ARC-0](../../arbol/architecture/00-components-and-boundaries.md#arbol-root), "Arbol Root"; [ARC-1](../../arbol/architecture/01-roots.md)). The [Root Contract](../contract/README.md) says what the Root manager shares with every Trunk. The specifications here say what its commands do and print, and what its Builds carry.
+What `arbol-root` does: it manages the [Arbol Trunks](../../arbol/GLOSSARY.md#arbol-trunk) of one [Root](../../arbol/GLOSSARY.md#arbol-root). It starts a Trunk for a new [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange), lists the Exchanges in progress, stops them, and has a Trunk [Build](../../arbol/GLOSSARY.md#build) save what is left of an Exchange whose process is gone. Its Builds also carry the Root's table layouts and migration script, which `arbol-roots` runs. For example, `arbol-root --root golden list` prints every Exchange in progress in Golden Root, each with its heartbeat. The architecture says where the component stands ([ARC-0](../../arbol/architecture/00-components-and-boundaries.md#arbol-root), "Arbol Root"; [ARC-1](../../arbol/architecture/01-roots.md)). The [Root Contract](../contract/README.md) says what the Root manager shares with every Trunk. The specifications here say what its commands do and print, and what its Builds carry. The owner answered the open questions on 15 October 2026, and the specifications were accepted the same day.
 
 Conventions (shape of a specification, requirement identifiers, origin, checks, status, decisions) are defined once in the [Driver Contract's README](../../arbol/driver-contract/README.md#conventions), with the checks *journey* and *drill* of the [Architecture](../../arbol/architecture/README.md#conventions). Identifiers here start with `RTM`: `RTM-0.4` is requirement 4 of specification 0. Decisions are numbered once for the whole chapter, `RTM-D1` onwards.
 
@@ -11,8 +11,8 @@ Conventions (shape of a specification, requirement identifiers, origin, checks, 
 
 | Spec | Title | Status |
 |---|---|---|
-| [RTM-0](00-the-commands.md) | The commands | review |
-| [RTM-1](01-builds-layouts-and-migration.md) | Builds, layouts and migration | review |
+| [RTM-0](00-the-commands.md) | The commands | accepted |
+| [RTM-1](01-builds-layouts-and-migration.md) | Builds, layouts and migration | accepted |
 
 ## Where the architecture's requirements of the Root manager are carried
 
@@ -27,11 +27,11 @@ Conventions (shape of a specification, requirement identifiers, origin, checks, 
 | ARC-0.28 | RTM-0.1, and `rootBuild` and `rootPackageVersion` in the listing (RTM-0.6) |
 | ARC-1.2 | RTM-1.5 for the Root's own tables; RCT-D24 for the chat tables; settings, the backend and the windows: Arbol's own specification |
 | ARC-1.15 | RTM-1.7 |
-| ARC-1.16 | RTM-1.6 and RTM-1.8 for the whole database; one chat: the migration script of RTM-1 once [RTM-D12](01-builds-layouts-and-migration.md#decisions), Open, is answered yes |
+| ARC-1.16 | RTM-1.6 and RTM-1.8 for the whole database; one chat: not in the first thin path ([RTM-D12](01-builds-layouts-and-migration.md#decisions)), left for a later task, in the migration script of RTM-1 |
 | ARC-1.17 | RTM-1.9, RTM-1.10; converting the rows of a table that changed waits for the first Root that changes one, because the second, trivial Root changes none (RTM-1) |
 | ARC-1.18 | RTM-1.7, RTM-1.8, and `arbol-roots migrate` only while the Root is `preparing` (RTM-1); keeping the Root `preparing` and reporting the failure: Arbol's own specification |
-| ARC-1.19 | The migration script of RTM-1 and a mark in the Root's own layout, once RTM-D12 is answered yes; RTM-1.11 keeps what the check compares; when the backend runs the check: Arbol's own specification |
-| ARC-1.20 | The migration script of RTM-1, once RTM-D12 is answered yes |
+| ARC-1.19 | Not in the first thin path (RTM-D12), left for a later task: the migration script of RTM-1 and a mark in the Root's own layout; RTM-1.11 keeps what the check compares; when the backend runs the check: Arbol's own specification |
+| ARC-1.20 | Not in the first thin path (RTM-D12), left for a later task, in the migration script of RTM-1 |
 | ARC-1.24 | RTM-0.3; RCT-0.7, RCT-0.10 |
 | ARC-1.25 | RTM-0.6, RTM-0.7 give a listing that can be combined; asking every Root and reporting a failing one: Arbol's own specification |
 | ARC-1.26 | RTM-0.1; RCT-1.2; restarts of the App and the backend: Arbol's own specification |

@@ -1,13 +1,13 @@
 ---
 role: authored
 spec: RCT-1
-status: review
+status: accepted
 ---
 # Root Contract · 01 The Exchange folder
 
 The *Exchange folder* is the folder a Trunk keeps for one [Chat Exchange](../../arbol/GLOSSARY.md#chat-exchange) while it runs, such as `~/Library/Application Support/Arbol/roots/golden/exchanges/7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b/`. It is the whole interface between a running Trunk and everything else ([ARC-2](../../arbol/architecture/02-chat-exchange-across-components.md)): the Root manager reads the record in it to list what runs, the Arbol backend follows the answer in it as it arrives, and a stop or an answer to the agent's question reaches the Trunk through it. This specification states where the folder is and how it comes and goes, the record `record.json` with the Trunk's signs of life, how a Trunk watches itself, the file `events.jsonl` that holds the answer as it arrives and its size limits, the file `control`, and what a reader can tell from what it finds. It matters because version 1 held the answer still arriving and the running usage only in process memory, which a crash lost, and gave no sign of life at all, so that a silent turn looked exactly like a busy one.
 
-It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md#conventions). It fixes the formats that ARC-2 and [ARC-3](../../arbol/architecture/03-stuck-trunks.md) leave to this contract. Its forms are technical choices made on 15 October 2026 ([RCT-D9](#decisions) to RCT-D13).
+It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md#conventions). It fixes the formats that ARC-2 and [ARC-3](../../arbol/architecture/03-stuck-trunks.md) leave to this contract. Its forms are technical choices made on 15 October 2026 ([RCT-D9](#decisions) to RCT-D13). The owner answered the chapter's open questions on 15 October 2026, and the specification was accepted the same day.
 
 ## Scope
 
