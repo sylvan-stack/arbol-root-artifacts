@@ -1,0 +1,66 @@
+{
+  "workspace": "https://linear.app/sylvan-stack",
+  "team": "Sylvan Stack",
+  "project": {
+    "name": "Arbol",
+    "url": "https://linear.app/sylvan-stack/project/arbol-e2185acd2538",
+    "id": "P-SYL-1"
+  },
+  "note": "Local files are the originals. Linear documents are copies republished from them.",
+  "documents": {
+    "contract/README.md": {
+      "title": "Root Contract · Conventions and index",
+      "id": "73ef97fa-87c3-4dd9-a1e6-5147aa3f890b",
+      "url": "https://linear.app/sylvan-stack/document/root-contract-conventions-and-index-ca56065cce21",
+      "published": "2026-10-15"
+    },
+    "contract/00-overview.md": {
+      "title": "Root Contract · 00 Overview",
+      "id": "d5cbd6f2-3baa-4b14-b144-70313cbad46c",
+      "url": "https://linear.app/sylvan-stack/document/root-contract-00-overview-f6aa4a874d63",
+      "published": "2026-10-15"
+    },
+    "contract/01-the-exchange-folder.md": {
+      "title": "Root Contract · 01 The Exchange folder",
+      "id": "c0cd34c8-27e0-48ec-b5af-c7434b56a76a",
+      "url": "https://linear.app/sylvan-stack/document/root-contract-01-the-exchange-folder-517e2115cb5b",
+      "published": "2026-10-15"
+    },
+    "contract/02-starting-stopping-and-settling.md": {
+      "title": "Root Contract · 02 Starting, stopping and settling",
+      "id": "7d5c5798-787f-4cbc-b0ec-7ce5bec00eb3",
+      "url": "https://linear.app/sylvan-stack/document/root-contract-02-starting-stopping-and-settling-a1dfc9c26569",
+      "published": "2026-10-15"
+    },
+    "contract/03-the-chat-tables.md": {
+      "title": "Root Contract · 03 The chat tables",
+      "id": "255b8251-b772-449f-b06c-9539febdd42b",
+      "url": "https://linear.app/sylvan-stack/document/root-contract-03-the-chat-tables-f1ed6f647e1e",
+      "published": "2026-10-15"
+    },
+    "contract/04-conformance.md": {
+      "title": "Root Contract · 04 Conformance",
+      "id": "c4d9f8c2-b049-4908-ae4e-cc7b918903ca",
+      "url": "https://linear.app/sylvan-stack/document/root-contract-04-conformance-5572fa337f89",
+      "published": "2026-10-15"
+    },
+    "specs/README.md": {
+      "title": "Root manager · Conventions and index",
+      "id": "748c2bfa-0472-4eb9-aa12-d413d2a3b8e0",
+      "url": "https://linear.app/sylvan-stack/document/root-manager-conventions-and-index-4efa7ab7e7c9",
+      "published": "2026-10-15"
+    },
+    "specs/00-the-commands.md": {
+      "title": "Root manager · 00 The commands",
+      "id": "bc7d1571-e4f4-46a5-8447-527032cdce7b",
+      "url": "https://linear.app/sylvan-stack/document/root-manager-00-the-commands-667c30293b32",
+      "published": "2026-10-15"
+    },
+    "specs/01-builds-layouts-and-migration.md": {
+      "title": "Root manager · 01 Builds, layouts and migration",
+      "id": "09db8578-8186-415a-9c19-454465199d8a",
+      "url": "https://linear.app/sylvan-stack/document/root-manager-01-builds-layouts-and-migration-107b82b10d73",
+      "published": "2026-10-15"
+    }
+  }
+}
