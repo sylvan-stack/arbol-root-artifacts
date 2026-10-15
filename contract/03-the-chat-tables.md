@@ -142,7 +142,7 @@ The layout:
 
 | ID | The layout must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-3.6 | be one file, `contract/<version>/layout.sql` in the `arbol-root` repository, of statements that can run again, with a comment on every table and column, run with `psql` on a Root's database by `arbol-roots` alone, and otherwise only on a database server of a test's or a check's own (RCT-4, RTM-1, TRV-0) | New | unit |
+| RCT-3.6 | be one file, `contract/<version>/layout.sql` in the `arbol-root` repository, of statements that can run again, with a comment on every table and column, run with `psql` on a Root's database by `arbol-roots` alone, and otherwise only on a database server of a test's or a check's own (RCT-4, RTM-1, TRV-0) | New | unit: `Layout.test_the_file_is_the_interface_of_rct_3`, `Layout.test_runs_twice_and_the_second_run_changes_nothing`, `Layout.test_every_table_and_column_has_a_comment`, `Layout.test_a_second_open_exchange_in_a_chat_is_refused`, `Layout.test_a_second_exchange_with_the_same_number_is_refused`, `Layout.test_a_failed_exchange_without_a_cause_is_refused`, `Layout.test_a_run_of_an_unknown_kind_is_refused`, `Layout.test_the_deletion_of_a_chat_that_has_exchanges_is_refused`, `Layout.test_nul_and_a_lone_half_of_a_surrogate_pair_are_refused_and_u_fffd_is_stored`, in `contract/conformance/tests/test_layout.py`, on a server of the test's own (SYL-170); that `arbol-roots` alone runs it on a Root's database: SYL-185 |
 
 Arbol:
 
