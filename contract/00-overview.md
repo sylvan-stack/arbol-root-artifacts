@@ -75,15 +75,15 @@ A Trunk Build *fits* a Root when its list holds the Root's version. A Root runs 
 
 `arbol-roots create <identifier> --root-contract <version>` writes a new Root's version into its `root.json`; without the option it takes the version of the Root named with `--from`, and 1 for a Root that grows from none. No command changes it afterwards. `arbol-roots ready` marks a Root working only while a working Build of `trivial` fits it, so the default Trunk works in every working Root. Pruning keeps, for every version a retained Root uses, the newest working Build of each Trunk that fits it (BLD-0).
 
-For example, First Sapling and Frodo Root use version 1, and a later Root, Elm, uses version 2:
+For example, First Sapling and a second Root made from it use version 1, and a later Root uses version 2:
 
-| Build of `trivial` | `rootContracts` | First Sapling and Frodo (version 1) | Elm (version 2) |
+| Build of `trivial` | `rootContracts` | First Sapling and the second Root (version 1) | The later Root (version 2) |
 |---|---|---|---|
 | 3 | `[1]` | fits | — |
 | 4 | `[1, 2]` | fits, and runs: the newest that fits | fits |
 | 5 | `[2]` | — | fits, and runs |
 
-Elm could be marked working only once Build 4 or 5 had passed its checks.
+The later Root could be marked working only once Build 4 or 5 had passed its checks.
 
 ### The command `arbol-trunk`
 

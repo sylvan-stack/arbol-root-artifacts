@@ -5,7 +5,7 @@ status: accepted
 ---
 # Root manager · 01 Builds, layouts and migration
 
-Each [Build](../../arbol/GLOSSARY.md#build) of `arbol-root` is made for one [Root](../../arbol/GLOSSARY.md#arbol-root) and carries three files of SQL for it. The *chat tables* file creates the tables of the Root's Root Contract version. The *own tables* file creates the tables that only this Root has, such as the record of where each migrated chat came from. The *migration script*, for a Root that grew from another, brings the chats of the older Root into the new one. For example, Build 7 of `arbol-root`, made for Frodo Root, holds `layout/chat-tables.sql`, `layout/root-tables.sql` and `layout/migrate.sql`, and `arbol-roots migrate frodo` runs all three with `psql`. This specification states how the `arbol-root` repository keeps these files for every Root, how a Build learns which Root it is made for and what it carries, how `arbol-roots` runs the files, the Root's own layout, the form of a migration script, what becomes of an Exchange that was open, the record of where a chat came from, and the checks a Build passes. It matters because the last upgrade of version 1 tried to convert all of history in place, behind a gate that was still open at its 137th checkpoint, and an earlier cutover cut 34 records short in place.
+Each [Build](../../arbol/GLOSSARY.md#build) of `arbol-root` is made for one [Root](../../arbol/GLOSSARY.md#arbol-root) and carries three files of SQL for it. The *chat tables* file creates the tables of the Root's Root Contract version. The *own tables* file creates the tables that only this Root has, such as the record of where each migrated chat came from. The *migration script*, for a Root that grew from another, brings the chats of the older Root into the new one. For example, Build 7 of `arbol-root`, made for the second Root, holds `layout/chat-tables.sql`, `layout/root-tables.sql` and `layout/migrate.sql`, and `arbol-roots migrate <second>` runs all three with `psql`. This specification states how the `arbol-root` repository keeps these files for every Root, how a Build learns which Root it is made for and what it carries, how `arbol-roots` runs the files, the Root's own layout, the form of a migration script, what becomes of an Exchange that was open, the record of where a chat came from, and the checks a Build passes. It matters because the last upgrade of version 1 tried to convert all of history in place, behind a gate that was still open at its 137th checkpoint, and an earlier cutover cut 34 records short in place.
 
 It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md). It gives the forms that [ARC-1](../../arbol/architecture/01-roots.md#moving-chats-between-roots) leaves to the Root, for the second, trivial Root that the first thin path creates and migrates into ([What is built first](../../arbol/architecture/01-roots.md#what-is-built-first), [ARC-D39](../../arbol/architecture/01-roots.md#decisions)). The owner decided on 15 October 2026 that the table layout is a plain file of SQL in the `arbol-root` repository, and that `arbol-roots` runs SQL files with `psql` ([RTM-D8](#decisions)). The other forms are technical choices made the same day. The owner answered the open questions on 15 October 2026, leaving to the agent whether the first thin path also brings single chats over again and checks for chats that went on in the older Root, which it does not ([RTM-D12](#decisions)), and the specification was accepted the same day.
 
@@ -33,8 +33,8 @@ One repository, `arbol-root`, holds the program and the SQL of every Root. The R
     conformance/              the Root Contract's conformance suite (RCT-4)
   roots/
     sapling/layout.sql         First Sapling's own tables
-    frodo/layout.sql          Frodo Root's own tables, migrated_chats among them
-    frodo/migrate.sql         brings the chats of First Sapling into Frodo Root
+    <second>/layout.sql          the second Root's own tables, migrated_chats among them
+    <second>/migrate.sql         brings the chats of First Sapling into the second Root
 ```
 
 ### Which Root a Build is made for
@@ -42,9 +42,9 @@ One repository, `arbol-root`, holds the program and the SQL of every Root. The R
 `arbol-builds build` is told the Root ([RTM-D9](#decisions)):
 
 ```sh
-arbol-roots create frodo --name "Frodo Root" --from sapling    # Frodo's root.json: "rootContract": 1, "grewFrom": "sapling"
-arbol-builds build arbol-root --root frodo                    # Build 7 of arbol-root, made for Frodo
-arbol-roots migrate frodo                                     # runs the three files of Build 7 (below)
+arbol-roots create <second> --name "<its loud name>" --from sapling    # its root.json: "rootContract": 1, "grewFrom": "sapling"
+arbol-builds build arbol-root --root <second>                    # Build 7 of arbol-root, made for the second Root
+arbol-roots migrate <second>                                     # runs the three files of Build 7 (below)
 ```
 
 `--root` on `build` names the Root a Build of `arbol` or `arbol-root` is made for. `arbol-builds` writes it as `root` into the Build's record when the build starts, so the build commands and the checks find it there. `arbol-build.json` names no Root, because one repository serves every Root. [BLD-0](../../arbol/builds/00-builds-and-versions.md#what-a-repository-says-about-its-build) states this since 15 October 2026 (RTM-D9); before, it read the Root from `arbol-build.json`.
@@ -63,12 +63,12 @@ A file it has to copy that is missing makes the build fail. The program of `arbo
 
 ```text
 ~/Library/Application Support/Arbol/builds/arbol-root/7/
-  build.json               "root": "frodo"
+  build.json               "root": "<second>"
   bin/arbol-root           the program of RTM-0
   layout/
     chat-tables.sql        contract/1/layout.sql
-    root-tables.sql        roots/frodo/layout.sql
-    migrate.sql            roots/frodo/migrate.sql
+    root-tables.sql        roots/<second>/layout.sql
+    migrate.sql            roots/<second>/migrate.sql
 ```
 
 ### How `arbol-roots` runs the files
@@ -76,11 +76,11 @@ A file it has to copy that is missing makes the build fail. The program of `arbo
 `arbol-roots` takes the files from the Root's newest working Build of `arbol-root` (ARC-1) and runs them with `psql`:
 
 ```sh
-psql --no-psqlrc --set ON_ERROR_STOP=1 --single-transaction --file …/7/layout/chat-tables.sql postgresql://arbol@127.0.0.1:5432/arbol_frodo
-psql --no-psqlrc --set ON_ERROR_STOP=1 --single-transaction --file …/7/layout/root-tables.sql postgresql://arbol@127.0.0.1:5432/arbol_frodo
+psql --no-psqlrc --set ON_ERROR_STOP=1 --single-transaction --file …/7/layout/chat-tables.sql postgresql://arbol@127.0.0.1:5432/arbol_<second>
+psql --no-psqlrc --set ON_ERROR_STOP=1 --single-transaction --file …/7/layout/root-tables.sql postgresql://arbol@127.0.0.1:5432/arbol_<second>
 cd <an empty folder of its own, mode 0700> && \
 psql --no-psqlrc --set ON_ERROR_STOP=1 --set from_database=arbol_sapling --set from_root=sapling \
-     --file …/7/layout/migrate.sql postgresql://arbol@127.0.0.1:5432/arbol_frodo
+     --file …/7/layout/migrate.sql postgresql://arbol@127.0.0.1:5432/arbol_<second>
 ```
 
 | Command of `arbol-roots` | Runs |
@@ -115,7 +115,7 @@ A table that did not change is copied as it is: the binary form keeps every byte
 
 An Exchange that is open in the older database at the snapshot is written into the new one as `interrupted`, ended at the time of the snapshot, with the rows its Trunk had saved by then. Its process and its folder stay in the older Root, where it goes on; the migration starts nothing (ARC-1).
 
-For example, the chat "What build.sh does" has three Exchanges in First Sapling when Frodo Root is migrated: the first completed, the second failed and was replaced by the third, and the third is open. In Frodo the first two are as they were, and the third is interrupted at the moment First Sapling was read, with the message and the one block of the answer its Trunk had saved. In First Sapling the third goes on, and its Trunk ends it there.
+For example, the chat "What build.sh does" has three Exchanges in First Sapling when the second Root is migrated: the first completed, the second failed and was replaced by the third, and the third is open. In the second Root the first two are as they were, and the third is interrupted at the moment First Sapling was read, with the message and the one block of the answer its Trunk had saved. In First Sapling the third goes on, and its Trunk ends it there.
 
 ### Where a migrated chat came from
 
@@ -184,11 +184,11 @@ interface BuildDescription {           // arbol-build.json at the top of the arb
 }
 ```
 
-The own tables of Frodo Root, `roots/frodo/layout.sql`, as the first thin path needs them:
+The own tables of the second Root, `roots/<second>/layout.sql`, as the first thin path needs them:
 
 ```sql
--- Frodo Root's own tables (RTM-1).
--- Kept in the arbol-root repository as roots/frodo/layout.sql; Frodo's arbol-root Builds carry it as layout/root-tables.sql.
+-- The second Root's own tables (RTM-1).
+-- Kept in the arbol-root repository as roots/<second>/layout.sql; the second Root's arbol-root Builds carry it as layout/root-tables.sql.
 -- arbol-roots runs it after the chat tables: psql --no-psqlrc --set ON_ERROR_STOP=1 --single-transaction --file root-tables.sql
 -- Every statement can run again: on a database that already has everything, the file changes nothing.
 -- Arbol's own tables, such as Drafts, are added to this file by Arbol's specification.
@@ -208,16 +208,16 @@ COMMENT ON COLUMN migrated_chats.ended_through IS 'How far the original had got 
 COMMENT ON COLUMN migrated_chats.migrated_at IS 'When the older database was read: the moment of the snapshot the copy shows.';
 ```
 
-The migration script of Frodo Root, `roots/frodo/migrate.sql`, whole:
+The migration script of the second Root, `roots/<second>/migrate.sql`, whole:
 
 ```sql
--- Frodo Root's migration script (RTM-1): brings the chats of First Sapling into Frodo's database.
--- Kept in the arbol-root repository as roots/frodo/migrate.sql; Frodo's arbol-root Builds carry it as layout/migrate.sql.
--- arbol-roots runs it with psql, connected to Frodo's database just made from Frodo's layouts, in an empty folder of
+-- The second Root's migration script (RTM-1): brings the chats of First Sapling into the second Root's database.
+-- Kept in the arbol-root repository as roots/<second>/migrate.sql; the second Root's arbol-root Builds carry it as layout/migrate.sql.
+-- arbol-roots runs it with psql, connected to the second Root's database just made from the second Root's layouts, in an empty folder of
 -- its own (mode 0700) that it removes afterwards:
 --   psql --no-psqlrc --set ON_ERROR_STOP=1 --set from_database=arbol_sapling --set from_root=sapling \
---        --file migrate.sql postgresql://arbol@127.0.0.1:5432/arbol_frodo
--- First Sapling and Frodo use Root Contract version 1, so every chat table is copied as it is.
+--        --file migrate.sql postgresql://arbol@127.0.0.1:5432/arbol_<second>
+-- First Sapling and the second Root use Root Contract version 1, so every chat table is copied as it is.
 
 \set to_database :DBNAME
 
@@ -232,7 +232,7 @@ SELECT now() AS snapshot \gset
 \copy (SELECT * FROM runs) TO 'runs.copy' WITH (FORMAT binary)
 COMMIT;
 
--- 2. Write Frodo's tables in one transaction, so that a failure leaves no row.
+-- 2. Write the second Root's tables in one transaction, so that a failure leaves no row.
 \connect :to_database
 BEGIN;
 \copy chats FROM 'chats.copy' WITH (FORMAT binary)
@@ -254,7 +254,7 @@ COMMIT;
 
 `\copy` takes its file name as written, without `psql` variables, so the script writes its files by bare names into the folder `psql` runs in.
 
-Both files were run on PostgreSQL 17.10 on 15 October 2026, in a throwaway server with no network, against fictional chats of First Sapling: two chats, an Exchange replaced by another, a failed one, a cancelled one and one still open, and messages with an emoji, U+FFFD, a CRLF, a tab, a backslash and trailing spaces. Both layouts, run twice, changed nothing the second time, and every column of `migrated_chats` had its comment. The migration ended with the exit status 0, and First Sapling's rows were unchanged. Every row of `chats`, `messages`, `tool_calls` and `runs`, and every Exchange that had ended, was the same in Frodo, the text byte for byte. The open Exchange was interrupted at the snapshot, and `migrated_chats` had one row for each chat, with `ended_through` 2 and 1. A run whose older database did not exist, and one whose new database lacked `migrated_chats`, ended with the exit status 3 and left no row. A second run on a database made new gave the same rows of `chats`, `messages`, `tool_calls` and `runs`, and a write in a `READ ONLY` transaction was refused. The run used the superuser `postgres` over a socket; the role `arbol`, a connection over TCP and a password were not tried. The installed server was not used.
+Both files were run on PostgreSQL 17.10 on 15 October 2026, in a throwaway server with no network, against fictional chats of First Sapling: two chats, an Exchange replaced by another, a failed one, a cancelled one and one still open, and messages with an emoji, U+FFFD, a CRLF, a tab, a backslash and trailing spaces. Both layouts, run twice, changed nothing the second time, and every column of `migrated_chats` had its comment. The migration ended with the exit status 0, and First Sapling's rows were unchanged. Every row of `chats`, `messages`, `tool_calls` and `runs`, and every Exchange that had ended, was the same in the second Root, the text byte for byte. The open Exchange was interrupted at the snapshot, and `migrated_chats` had one row for each chat, with `ended_through` 2 and 1. A run whose older database did not exist, and one whose new database lacked `migrated_chats`, ended with the exit status 3 and left no row. A second run on a database made new gave the same rows of `chats`, `messages`, `tool_calls` and `runs`, and a write in a `READ ONLY` transaction was refused. The run used the superuser `postgres` over a socket; the role `arbol`, a connection over TCP and a password were not tried. The installed server was not used.
 
 ## Known problems in version 1
 
@@ -275,8 +275,8 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 | ID | Question | Proposed default | Outcome |
 |---|---|---|---|
 | RTM-D8 | Where does the `arbol-root` repository keep the layouts, the migration scripts and the conformance suite, and what does a Build carry? | `contract/<version>/layout.sql` and `contract/conformance/` for the Root Contract, shared by every Root of a version; `roots/<root>/layout.sql` and `roots/<root>/migrate.sql` for each Root. A Build carries copies of its Root's files under fixed names in `layout/`, so `arbol-roots` finds them without knowing the repository. The alternative: one branch of the repository for each Root, which keeps the files of one Root apart from another's but makes every fix to the program a merge into each branch | Decided 15 October 2026 by the owner: the table layout is a plain `layout.sql` in the `arbol-root` repository, and `arbol-roots` runs SQL files with `psql` (SYL-168, decision 5). The folders and the names in `layout/` are a technical choice made the same day |
-| RTM-D9 | How does `arbol-builds build arbol-root` know which Root it builds for? | It is told: `arbol-builds build arbol-root --root frodo` writes `"root": "frodo"` into the record when the build starts, and `arbol-build.json` names no Root, because one repository serves every Root. The build reads the Root's `root.json` for its Root Contract version and the Root it grew from. It is the one change this specification needs in BLD-0, and it holds for `arbol` too. The alternative: `arbol-build.json` names the Root, and the owner edits the file before each build for another Root | Decided 15 October 2026, a technical choice: the proposed default |
+| RTM-D9 | How does `arbol-builds build arbol-root` know which Root it builds for? | It is told: `arbol-builds build arbol-root --root <second>` writes `"root": "<second>"` into the record when the build starts, and `arbol-build.json` names no Root, because one repository serves every Root. The build reads the Root's `root.json` for its Root Contract version and the Root it grew from. It is the one change this specification needs in BLD-0, and it holds for `arbol` too. The alternative: `arbol-build.json` names the Root, and the owner edits the file before each build for another Root | Decided 15 October 2026, a technical choice: the proposed default |
 | RTM-D10 | `psql` talks to one database at a time. How does a migration script read the older database? | It switches to it with `\connect`, reads every table in one transaction that is `REPEATABLE READ` and `READ ONLY`, so the copy shows one moment and nothing there can change, and writes each table in binary into the folder it runs in. Then it switches back and writes the new database in one transaction. `arbol-roots` runs it in an empty folder of its own and removes the folder afterwards. The alternative: the extension `postgres_fdw`, which reads the older tables without files but has to be created by a superuser and leaves a server definition in the new database | Decided 15 October 2026, a technical choice: the proposed default |
 | RTM-D11 | Where is the record of where a migrated chat came from, and what does it hold? | A table `migrated_chats` in the Root's own layout (RCT-D25). For each chat: the Root and the chat it came from, the number of the original's last Exchange that had ended, and when the original was read. A migrated chat keeps its identifier. A later check can then tell a copy whose original went on: the original has an ended Exchange with a higher number. The alternative: the time of the original's last change instead of the number, which a clock set back would mislead | Decided 15 October 2026, a technical choice: the proposed default |
-| RTM-D12 | After Frodo Root is made from First Sapling, a chat can go on in First Sapling. Does the first thin path already build what deals with that: Frodo noticing such a chat, and bringing that one chat over again? | No. The first migration brings the whole of First Sapling over once, and writes for each chat where it came from and how far it had got (`migrated_chats`), so both can be added later without changing that record. In practice: a chat you go on with in First Sapling after Frodo was made stays at its old state in Frodo, and Frodo does not tell you. ARC-1.19, ARC-1.20, the one-chat half of ARC-1.16 and a script that can run for one chat (ARC-1) are then not met in the first thin path; when they are built, they go into `roots/<root>/migrate.sql` and the Root's own layout. The alternative: build them now, as the owner had the check built first to see how it works (ARC-D50). Each time Frodo's backend starts or its chat list opens, `arbol-roots migrate frodo --check` marks such a chat as out of date, and the window offers to bring it over again: that replaces Frodo's copy, or adds First Sapling's chat as a second chat when you also wrote in Frodo. The cost: a `--check` and a one-chat form of `migrate.sql`, and a column for the mark, all written before any migration has run | Decided 15 October 2026: the owner left it to the agent ("Not sure yet. You decide"), which chose the proposed default |
+| RTM-D12 | After the second Root is made from First Sapling, a chat can go on in First Sapling. Does the first thin path already build what deals with that: the second Root noticing such a chat, and bringing that one chat over again? | No. The first migration brings the whole of First Sapling over once, and writes for each chat where it came from and how far it had got (`migrated_chats`), so both can be added later without changing that record. In practice: a chat you go on with in First Sapling after the second Root was made stays at its old state in the second Root, and the second Root does not tell you. ARC-1.19, ARC-1.20, the one-chat half of ARC-1.16 and a script that can run for one chat (ARC-1) are then not met in the first thin path; when they are built, they go into `roots/<root>/migrate.sql` and the Root's own layout. The alternative: build them now, as the owner had the check built first to see how it works (ARC-D50). Each time the second Root's backend starts or its chat list opens, `arbol-roots migrate <second> --check` marks such a chat as out of date, and the window offers to bring it over again: that replaces the second Root's copy, or adds First Sapling's chat as a second chat when you also wrote in the second Root. The cost: a `--check` and a one-chat form of `migrate.sql`, and a column for the mark, all written before any migration has run | Decided 15 October 2026: the owner left it to the agent ("Not sure yet. You decide"), which chose the proposed default |
 | RTM-D13 | Which checks does an `arbol-root` Build pass, and on which database? | Three: `unit` for the commands, against a stand-in `arbol-trunk`; `layout`; and `migration` for a Root that grew from another. The last two each run on a PostgreSQL server of their own in a temporary folder, listening only on a socket, as the Root Contract's suite does (RCT-D26). No check reaches the installed server. The alternative: a scratch database on the installed server, which needs no `initdb` but puts tests and chats on one server | Decided 15 October 2026, a technical choice: the proposed default |
