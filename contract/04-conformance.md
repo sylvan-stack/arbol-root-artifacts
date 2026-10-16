@@ -22,7 +22,7 @@ Not covered: a Trunk's own unit tests, which each Trunk chooses; checks of the R
 The suite lives in the `arbol-root` repository, in the folder `contract/conformance`, beside `contract/1/layout.sql`: it belongs to the Root that gives the contract, as the Driver Contract's suite lives in `arbol` (DRV-5). It is typed Python that uses only the standard library, and it reads the tables with `psql`.
 
 ```sh
-python3.14 ~/repos/sylvan-stack/arbol-root/contract/conformance/bin/rct-conformance.py \
+python3.14 ~/repos/sylvan-stack/readonly/arbol-root/contract/conformance/bin/rct-conformance.py \
   --trunk "$ARBOL_BUILD_DIR/bin/arbol-trunk-trivial" --root-contract 1
 python3.14 …/rct-conformance.py --trunk "…" --root-contract 1 --only R3,R8
 ```
@@ -78,7 +78,7 @@ One program for every Trunk, part of the suite: `contract/conformance/standin/dr
 
 ### How a Trunk Build's check runs it
 
-A Trunk's `arbol-build.json` names the suite as its check of the kind `contract`, once for each version in its `rootContracts`. The check starts the Build's own program, not the launcher, as every check does (BLD-0):
+A Trunk's `arbol-build.json` names the suite as its check of the kind `contract`, once for each version in its `rootContracts`. It runs the suite from `~/repos/sylvan-stack/readonly/arbol-root`, the clone of the last merged `main` ([BLD-D18](../../arbol/builds/00-builds-and-versions.md#decisions)). The check starts the Build's own program, not the launcher, as every check does (BLD-0):
 
 ```json
 {
@@ -86,7 +86,7 @@ A Trunk's `arbol-build.json` names the suite as its check of the kind `contract`
   "rootContracts": [1],
   "checks": [
     { "name": "contract-1", "kind": "contract",
-      "command": "\"$ARBOL_BUILD_DIR/<its Python>\" ~/repos/sylvan-stack/arbol-root/contract/conformance/bin/rct-conformance.py --trunk \"$ARBOL_BUILD_DIR/<its entry>\" --root-contract 1" }
+      "command": "\"$ARBOL_BUILD_DIR/<its Python>\" ~/repos/sylvan-stack/readonly/arbol-root/contract/conformance/bin/rct-conformance.py --trunk \"$ARBOL_BUILD_DIR/<its entry>\" --root-contract 1" }
   ]
 }
 ```
