@@ -130,9 +130,9 @@ A Trunk:
 
 | ID | A Trunk must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-3.1 | write rows only into `chats`, `exchanges`, `messages`, `tool_calls` and `runs`, only for the Exchange it runs or settles and, when it accepts a message sent again, the Exchange that message replaces (RCT-3.4), with SQL of its own, and create, change or remove no table, column, index or check | Changed | contract |
-| RCT-3.2 | write each row by the rules of *How lines become rows* as soon as the line it comes from is in `events.jsonl`, with an insert that does nothing when the row is already there | Changed | contract |
-| RCT-3.3 | write the Leather Bag's message at position 0 exactly as it was sent, and each block of the answer exactly as the Driver's `text` event carried it, apart from the replacements of RCT-3.10 | Kept | contract |
+| RCT-3.1 | write rows only into `chats`, `exchanges`, `messages`, `tool_calls` and `runs`, only for the Exchange it runs or settles and, when it accepts a message sent again, the Exchange that message replaces (RCT-3.4), with SQL of its own, and create, change or remove no table, column, index or check | Changed | contract: R16 after every scenario, R1 and R19 (SYL-171) |
+| RCT-3.2 | write each row by the rules of *How lines become rows* as soon as the line it comes from is in `events.jsonl`, with an insert that does nothing when the row is already there | Changed | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Rows`, `Saving` (SYL-171) |
+| RCT-3.3 | write the Leather Bag's message at position 0 exactly as it was sent, and each block of the answer exactly as the Driver's `text` event carried it, apart from the replacements of RCT-3.10 | Kept | contract: R1 (SYL-171) |
 | RCT-3.10 | replace the character U+0000 and every half of a surrogate pair that stands alone with U+FFFD in every value it writes, and change nothing else | New | contract |
 | RCT-3.11 | try no row of the answer again that the database refused with an error of the SQLSTATE class 22 or 23, leave it out, and end an Exchange whose end is not yet written as failed with `trunk_failed`, naming the line | New | unit |
 | RCT-3.4 | change no row of an Exchange that has ended, except to set its `replaced_by` once, and delete no row, except the rows in `messages` and `tool_calls` of the Exchange that a message sent again replaces, deleted by the Trunk that accepts that message | New | contract |
