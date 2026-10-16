@@ -108,7 +108,7 @@ Its form is `arbol-trunk [--root <root>] [<code name>] [-v <build>] <command> [<
 
 `arbol-trunk` is a launcher that `arbol-builds` writes, and it holds no Trunk code. It reads the Root's `root.json` and the Build records, picks the Build and starts its program in its own place, as every launcher does (BLD-0). It hands the Build `--root <root>` followed by the command and everything after it, unchanged, so a Build always knows its Root, also when the Root was not named. `--root` is recognised only before the code name, and a Build refuses a second one. No setting of the Root narrows which Builds may run: the Trunks a Root runs are those whose Builds list its Root Contract version, as `arbol-trunk list` and `arbol-root trunks` show them ([RCT-D28](#decisions)).
 
-The launcher refuses a call, with the refusal of BLD-0 (one line `{ "error": { "code", "message" }, "available": [...] }` and exit status 1), for an unknown Root (`unknown_root`), an unknown Trunk (`unknown_trunk`), and a named Build that does not fit or a Trunk with no working Build that fits (`no_fit`); `available` lists the runnable Builds of that Trunk that fit. Build numbers of different Trunks are never compared (BLD-0).
+The launcher refuses a call, with the refusal of BLD-0 (one line `{ "error": { "code", "message" }, "available": [...] }` and exit status 1), for an unknown Root (`unknown_root`), an unknown Trunk (`unknown_trunk`), and a named Build that does not fit or a Trunk with no working Build that fits (`no_fit`); `available` lists the runnable Builds of that Trunk that fit. Build numbers of different Trunks are never compared (BLD-0). A Root identifier that is not one lower-case word of letters and digits, and a call that names no Root while no Root is working, are refused with `unknown_root` too, with a message that says which, and a call without a command with `invalid_input`; how the launcher reads a call and the Roots is in BLD-0 ([BLD-D17](../../arbol/builds/00-builds-and-versions.md#decisions)).
 
 `arbol-trunk list` prints the current Root, or the one named with `--root`, with every Trunk and its Builds, and marks the Build that `run` would start. With a code name, only that Trunk:
 
@@ -212,10 +212,10 @@ The launcher `arbol-trunk`:
 
 | ID | The launcher must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-0.7 | take `[--root <root>] [<code name>] [-v <build>]` before the command, take the current Root when no Root and `trivial` when no Trunk is named, and start the newest working Build of that Trunk whose `rootContracts` hold the Root's `rootContract`, or the named Build when it fits (RCT-D28) | New | unit |
-| RCT-0.8 | hand the Build `--root <root>` followed by the command and every later argument unchanged | New | unit |
-| RCT-0.9 | refuse an unknown Root, an unknown Trunk and a Build that does not fit with the refusal of BLD-0, listing in `available` the runnable Builds that fit, and never compare the build numbers of different Trunks | New | unit |
-| RCT-0.10 | answer `arbol-trunk list` from `root.json` and the Build records alone, with every Trunk, its Builds, their `rootContracts` and whether each is runnable, and the Build that `run` would start | New | unit |
+| RCT-0.7 | take `[--root <root>] [<code name>] [-v <build>]` before the command, take the current Root when no Root and `trivial` when no Trunk is named, and start the newest working Build of that Trunk whose `rootContracts` hold the Root's `rootContract`, or the named Build when it fits (RCT-D28) | New | unit: `tests/test_builds.py` of `arbol`: `builds.trunk-launch`, `builds.trunk-selection`, `builds.trunk-named-build`, `builds.trunk-first-build` (SYL-179) |
+| RCT-0.8 | hand the Build `--root <root>` followed by the command and every later argument unchanged | New | unit: `tests/test_builds.py` of `arbol`: `builds.trunk-launch`, `builds.trunk-selection`, `builds.trunk-pass-through` (SYL-179) |
+| RCT-0.9 | refuse an unknown Root, an unknown Trunk and a Build that does not fit with the refusal of BLD-0, listing in `available` the runnable Builds that fit, and never compare the build numbers of different Trunks | New | unit: `tests/test_builds.py` of `arbol`: `builds.trunk-refusals`, `builds.trunk-no-fit`, `builds.trunk-named-build` (SYL-179) |
+| RCT-0.10 | answer `arbol-trunk list` from `root.json` and the Build records alone, with every Trunk, its Builds, their `rootContracts` and whether each is runnable, and the Build that `run` would start | New | unit: `tests/test_builds.py` of `arbol`: `builds.trunk-list`, `builds.trunk-list-chosen` (SYL-179) |
 
 `arbol-roots`:
 
@@ -267,7 +267,7 @@ interface TrunkList {
 
 // a refusal of the launcher, as in BLD-0; a refusal of a Trunk Build has no "available"
 interface Refusal {
-  error: { code: string; message: string };   // "unknown_root", "unknown_trunk", "no_fit"
+  error: { code: string; message: string };   // "unknown_root", "unknown_trunk", "no_fit", "invalid_input" (BLD-D17)
   available?: string[];                // the runnable Builds of the Trunk that fit, ["4", "3"]
 }
 ```
