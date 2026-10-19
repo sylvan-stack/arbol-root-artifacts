@@ -16,7 +16,7 @@ Conventions (shape of a specification, requirement identifiers, origin, checks, 
 
 ## Where the architecture's requirements of the Root manager are carried
 
-*Arbol's own specification* below means the specification of `arbol` and `arbol-roots`, which is not written yet.
+Where the Arbol backend or a window carries a part, the row names the requirements of the [Arbol backend chapter](../../arbol/backend/README.md) (`BKD`), and for a part of Arbol not yet specified, its task.
 
 | Requirement | Carried by |
 |---|---|
@@ -25,25 +25,25 @@ Conventions (shape of a specification, requirement identifiers, origin, checks, 
 | ARC-0.17 | RTM-0.2; RTM-1.1 (the Build carries SQL that only `arbol-roots` runs) |
 | ARC-0.27 | RTM-0.3; RTM-0.6, RTM-0.9 and RTM-0.13 work from the records, which are alike for every Trunk |
 | ARC-0.28 | RTM-0.1, and `rootBuild` and `rootPackageVersion` in the listing (RTM-0.6) |
-| ARC-1.2 | RTM-1.5 for the Root's own tables; RCT-D24 for the chat tables; settings, the backend and the windows: Arbol's own specification |
+| ARC-1.2 | RTM-1.5 for the Root's own tables; RCT-D24 for the chat tables; the backend's own tables and settings: BKD-0.7; the Bridge: BKD-1.9 |
 | ARC-1.15 | RTM-1.7 |
 | ARC-1.16 | RTM-1.6 and RTM-1.8 for the whole database; one chat: not in the first thin path ([RTM-D12](01-builds-layouts-and-migration.md#decisions)), left for a later task, in the migration script of RTM-1 |
 | ARC-1.17 | RTM-1.9, RTM-1.10; converting the rows of a table that changed waits for the first Root that changes one, because the second, trivial Root changes none (RTM-1) |
-| ARC-1.18 | RTM-1.7, RTM-1.8, and `arbol-roots migrate` only while the Root is `preparing` (RTM-1); keeping the Root `preparing` and reporting the failure: Arbol's own specification |
-| ARC-1.19 | Not in the first thin path (RTM-D12), left for a later task: the migration script of RTM-1 and a mark in the Root's own layout; RTM-1.11 keeps what the check compares; when the backend runs the check: Arbol's own specification |
+| ARC-1.18 | RTM-1.7, RTM-1.8, and `arbol-roots migrate` only while the Root is `preparing` (RTM-1); a Root that is `preparing` in the header of its window: BKD-2.1; keeping it `preparing` and reporting the failure in the tray menu: the Arbol Swift App (SYL-192) |
+| ARC-1.19 | Not in the first thin path (RTM-D12), left for a later task: the migration script of RTM-1 and a mark in the Root's own layout; RTM-1.11 keeps what the check compares; when the backend runs the check: SYL-195 |
 | ARC-1.20 | Not in the first thin path (RTM-D12), left for a later task, in the migration script of RTM-1 |
 | ARC-1.24 | RTM-0.3; RCT-0.7, RCT-0.10 |
-| ARC-1.25 | RTM-0.6, RTM-0.7 give a listing that can be combined; asking every Root and reporting a failing one: Arbol's own specification |
-| ARC-1.26 | RTM-0.1; RCT-1.2; restarts of the App and the backend: Arbol's own specification |
+| ARC-1.25 | RTM-0.6, RTM-0.7 give a listing that can be combined; asking every Root and reporting a failing one: BKD-0.22 |
+| ARC-1.26 | RTM-0.1; RCT-1.2; restarts of the backend: BKD-0.21, BKD-0.22; of the App: SYL-192 |
 | ARC-1.27 | RTM-1.7, RTM-1.10 |
-| ARC-1.28 | RTM-1.1, RTM-1.4, RTM-1.5; RCT-3.1, RCT-3.6; running the files: Arbol's own specification |
+| ARC-1.28 | RTM-1.1, RTM-1.4, RTM-1.5; RCT-3.1, RCT-3.6; running the files: `arbol-roots` (RTM-1); the backend creates or changes no table: BKD-0.6 |
 | ARC-1.29 | RTM-1.1, RTM-1.6; RTM-0.2 (the program runs none of them) |
-| ARC-2.7 | RTM-0.6, RTM-0.13; RCT-2.12; showing the Exchange: Arbol's own specification |
+| ARC-2.7 | RTM-0.6, RTM-0.13; RCT-2.12; showing the Exchange: BKD-0.18, BKD-2.16 |
 | ARC-2.12 | RTM-1.10, for the migration: it starts nothing and leaves the original Exchange with its Root; RCT-1.2, RCT-3.4 for the rest |
 | ARC-3.5 | RTM-0.6 |
 | ARC-3.6 | RTM-0.9, RTM-0.10, RTM-0.12; RCT-2.15 |
 | ARC-3.7 | RTM-0.10, RTM-0.12; RCT-2.8, RCT-2.15 |
 | ARC-3.8 | RTM-0.11 |
-| ARC-3.10 | RTM-0.12; RCT-1.4, RCT-2.21; the looks of ARC-3.9: Arbol's own specification |
+| ARC-3.10 | RTM-0.12; RCT-1.4, RCT-2.21; the looks of ARC-3.9: BKD-0.19 |
 
 Tests of a Root's own Builds (ARC-1.22) are carried by RTM-0.15 and RTM-1.3.

@@ -21,7 +21,7 @@ The table layout of contract version 1 is also a file of its own, `contract/1/la
 
 ## Where the architecture's requirements of a Trunk are carried
 
-*Each Trunk's own specification* below means, for the first Trunk, the [Trivial Trunk's](../../arbol-trunk/trunks/trivial/specs/README.md) (`TRV`). *Arbol's own specification* means the specification of `arbol` and `arbol-roots`, which is not written yet. What the Root manager carries is in the [Root manager's README](../specs/README.md#where-the-architectures-requirements-of-the-root-manager-are-carried).
+*Each Trunk's own specification* below means, for the first Trunk, the [Trivial Trunk's](../../arbol-trunk/trunks/trivial/specs/README.md) (`TRV`). Where the Arbol backend or a window carries a part, the row names the requirements of the [Arbol backend chapter](../../arbol/backend/README.md) (`BKD`). What the Root manager carries is in the [Root manager's README](../specs/README.md#where-the-architectures-requirements-of-the-root-manager-are-carried).
 
 | Requirement | Carried by |
 |---|---|
@@ -32,19 +32,19 @@ The table layout of contract version 1 is also a file of its own, `contract/1/la
 | ARC-0.22 | RCT-0.1 |
 | ARC-0.24 | RCT-2.22, RCT-1.11; what a Trunk does with a title: each Trunk's own specification, for the Trivial Trunk TRV-0.8 |
 | ARC-1.22 | For a Trunk Build: RCT-4.1, RCT-4.2 ([RCT-D29](04-conformance.md#decisions)); for a Root's own Builds: the [Root manager's README](../specs/README.md) |
-| ARC-2.1 | RCT-2.1, RCT-2.2; keeping the Draft: Arbol's own specification |
+| ARC-2.1 | RCT-2.1, RCT-2.2; keeping the Draft: BKD-0.10, BKD-0.12 |
 | ARC-2.2 | RCT-1.5, RCT-1.6, RCT-1.12, RCT-3.2 |
 | ARC-2.3 | RCT-3.2 |
 | ARC-2.5 | RCT-1.7, RCT-1.8, RCT-2.7, RCT-2.16 |
 | ARC-2.6 | RCT-2.9, RCT-2.20 |
-| ARC-2.8 | RCT-2.17 and the index `exchanges_one_open_per_chat` of RCT-3; other chats go on because each Exchange runs in a process of its own (RCT-0), and the backend and the windows serve them meanwhile: Arbol's own specification |
+| ARC-2.8 | RCT-2.17 and the index `exchanges_one_open_per_chat` of RCT-3; other chats go on because each Exchange runs in a process of its own (RCT-0), and the backend and the windows serve them meanwhile: BKD-0.9, BKD-0.14 |
 | ARC-2.9 | RCT-2.2 (`database_unavailable`), RCT-2.11 |
 | ARC-2.10 | RCT-2.10; for the Trivial Trunk TRV-0.2 |
 | ARC-3.1 | RCT-1.3 |
 | ARC-3.2 | RCT-1.3 |
 | ARC-3.3 | RCT-1.4 |
 | ARC-3.4 | RCT-2.21 (RCT-D30); for the Trivial Trunk TRV-0.10, TRV-0.11 |
-| ARC-3.10 | RCT-1.4, RCT-2.21, both counted with `CLOCK_UPTIME_RAW`; for the Trivial Trunk TRV-0.10, TRV-0.11; the 20 and 5 seconds of a stop: RTM-0.12; the looks of ARC-3.9: Arbol's own specification |
+| ARC-3.10 | RCT-1.4, RCT-2.21, both counted with `CLOCK_UPTIME_RAW`; for the Trivial Trunk TRV-0.10, TRV-0.11; the 20 and 5 seconds of a stop: RTM-0.12; the looks of ARC-3.9: BKD-0.19 |
 
 ## Conventions
 
