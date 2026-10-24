@@ -92,6 +92,13 @@ cd ~/repos/shop && arbol-trunk run "What does build.sh do?"
 
 Standard output never holds up or ends the Exchange. A line that standard output cannot take at once, for example because nothing reads it, is left out there; the file keeps it. A write that fails, for example because the starter was killed before it read the acceptance line, or because the lines go to `head`, ends nothing: the Trunk writes nothing more to standard output and goes on. A starter that lost the acceptance line learns what happened by a repeat (above).
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/run.py#run_exchange
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/run.py#run_accepted
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/events.py#EventsFile._append
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/output.py
+-->
+
 ### One process group
 
 A Trunk leads a process group of its own, whose identifier is the Trunk's process identifier. Every process it starts itself for the Exchange, its Driver runs and `arbol-classifier` among them, stays in that group. `arbol-root` starts it detached from the terminal and from `arbol-root` itself, in a process group of its own, as the system call `setsid` does, and an interactive shell gives each command line a group that its first program leads. A Trunk that leads its group when it starts stays in it, so that Ctrl-C reaches a Trunk in the foreground; one that does not makes itself the leader of a new group.
@@ -99,6 +106,11 @@ A Trunk leads a process group of its own, whose identifier is the Trunk's proces
 A Driver keeps the vendor tool, and with it the agent's commands, in process groups of their own, and ends them itself when its run is stopped, also on an interrupt or termination signal (DRV-2). The Trunk therefore *ends its group* in two steps: SIGTERM to the group, upon which each Driver in it stops its run and ends what the run started, and 5 seconds later SIGKILL to whatever in the group is still alive. The Trunk's watch on itself ([RCT-1](01-the-exchange-folder.md#the-trunk-watches-itself)) and the termination signal (below) end the group this way, and so does `arbol-root stop --force` (ARC-3). A Driver killed before it could end the vendor tool leaves that to the next call of the same Driver, which ends it (DRV-6, ARC-3). A program that moved itself out of those groups is out of everyone's reach (DRV-D33).
 
 For example, the agent runs `make` when the group is ended: the Driver gets SIGTERM, asks `claude` to stop, ends it and the `make` within a few seconds, and exits; the SIGKILL 5 seconds after the SIGTERM finds nothing left.
+
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/detach.py#lead_process_group
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/termination.py#end_group
+-->
 
 ### Stop
 
@@ -114,6 +126,11 @@ A window shows "stopping" from the request, and "stopped" only once the end line
 A Trunk that receives SIGTERM ends its group as above and writes no end ([RCT-D18](#decisions)). This is how a stop that was not obeyed and `arbol-root stop --force` end an Exchange (ARC-3): settling then saves it as interrupted, because the Trunk never confirmed the stop, unless the Trunk had already written its end, which then stands. In contract version 1 a Trunk treats SIGINT, and in the foreground also SIGHUP, as SIGTERM, so Ctrl-C and a closed terminal leave an Exchange to be settled as interrupted.
 
 For example, `arbol-root stop --force` sends SIGTERM to the group of an Exchange whose Trunk has not obeyed a stop: the Driver stops its run, the Trunk exits without an end, and `arbol-trunk … settle` saves every block and tool call that had arrived, and the Exchange as interrupted.
+
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/termination.py#install_handlers
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/cli.py#main
+-->
 
 ### The end
 
@@ -202,6 +219,14 @@ arbol-trunk --root sapling trivial -v 4 settle 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4
 
 Settling changes no Exchange that has ended, and it can run twice: the second finds no folder. Two settles of one Exchange may also run at the same time, such as the one of `arbol-root stop` and one Arbol runs after a listing: a settle whose folder the other removed first counts it as removed and prints the state the Exchange then has in the database, with the exit status 0. Because RCT-3 fixes how lines become rows, every Trunk Build that implements the Root's version can settle every Exchange of the Root, whichever Trunk ran it ([RCT-D20](#decisions)). Which Build the Root manager starts for it, and when, is in its own specification (ARC-2, ARC-3).
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/command.py#parse
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/settle.py
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.exchange_state
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.end
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/rows.py#RowMaker
+-->
+
 ### Sending a message again
 
 The Leather Bag can send the message of a chat's last Exchange again, once that Exchange has ended, for example after a failure or a rate limit. The previous answer and its tool calls are discarded, and everything runs again from the same message ([RCT-D15](#decisions)).
@@ -247,18 +272,18 @@ A Trunk:
 | RCT-2.3 | look for a handed Exchange identifier in the database and in the Root's folder, under its name and under `.<exchange>.new`, before it makes any identifier; answer with that Exchange's acceptance and `"duplicate": true` when the database has it; refuse with `in_progress` while another start of it lives or is less than 15 seconds old; and remove a folder whose start died before the database had it and go on as a new Exchange | Changed | contract |
 | RCT-2.18 | when two starts of the same Exchange identifier meet, let only the one that renamed its folder into place go on, and refuse the other with `in_progress` after removing what it made | New | contract |
 | RCT-2.4 | with `--detach`, point its standard input, output and error at `/dev/null` after the acceptance line, ignore SIGHUP, and finish the Exchange without its starter, Arbol, the Root manager or the database | Changed | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Background` (SYL-171); drill: SYL-187 |
-| RCT-2.5 | without `--detach`, write every line it appends to `events.jsonl` on standard output too, and end with the exit status 0 for completed, 1 for failed and 2 for cancelled | New | contract |
-| RCT-2.19 | let standard output never hold up, change or end the Exchange: leave out a line it cannot take at once, and write nothing more there after a write has failed | New | contract |
+| RCT-2.5 | without `--detach`, write every line it appends to `events.jsonl` on standard output too, and end with the exit status 0 for completed, 1 for failed and 2 for cancelled | New | contract: R2 (SYL-174); also the Trivial Trunk’s unit `WholeExchange.test_foreground_exit_status_follows_the_exchange_end` |
+| RCT-2.19 | let standard output never hold up, change or end the Exchange: leave out a line it cannot take at once, and write nothing more there after a write has failed | New | contract: R2 (SYL-174); also the Trivial Trunk’s unit `ForegroundOutput` in `trunks/trivial/tests/test_output.py`; repeats: R4 in SYL-175 |
 | RCT-2.6 | lead a process group of its own and keep in it every process it starts itself for the Exchange | New | contract |
 | RCT-2.7 | on a stop line, hand the stop to its run and stop a small call that runs, start no run that had not started, and write its end to its folder within 18 seconds of the line, `cancelled` unless the run had ended otherwise before the stop reached it | Changed | contract: R8 (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `StoppingTheRun`, `WholeExchange.test_after_a_stop_line_before_the_run_no_run_starts_and_the_exchange_is_cancelled`, `WholeExchange.test_a_stop_line_while_a_tool_call_runs_cancels_the_exchange_and_saves_the_call_as_interrupted` (SYL-173); the Trivial Trunk makes no small call (TRV-0.8) |
-| RCT-2.8 | on SIGTERM, on SIGINT, and in the foreground on SIGHUP, end its process group with SIGTERM and 5 seconds later SIGKILL, and write no end | New | contract |
+| RCT-2.8 | on SIGTERM, on SIGINT, and in the foreground on SIGHUP, end its process group with SIGTERM and 5 seconds later SIGKILL, and write no end | New | contract: R2 and R10 (SYL-174); also the Trivial Trunk’s unit `Termination` and `Background` |
 | RCT-2.9 | end every accepted Exchange exactly once, on every path, with no other component accepting or confirming the end | Changed | contract: R1 (SYL-171); R11 comes with SYL-177; drill: SYL-187 |
 | RCT-2.20 | end an Exchange in this order: the end in its folder, then the rows not yet saved and the final state in one transaction that changes only an open Exchange, then the folder removed; and when the folder cannot be written, end it as failed with `folder_unwritable` straight in the database and leave the folder | New | contract: R1 (SYL-171); R11 comes with SYL-177; also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `SavingTheEnd` (SYL-171); drill: SYL-187 |
 | RCT-2.10 | end an Exchange whose run met a rate limit as failed with the Driver's error kept whole, and start no run on another route | Changed | contract |
 | RCT-2.21 | end a Driver run that gave no event for one minute longer than its idle limit, counted with `CLOCK_UPTIME_RAW`, while no tool call or question was open and, where its own specification says how it tells one, no command left in the background (RCT-D30), and end the Exchange as failed with `driver_silent` | New | contract |
 | RCT-2.22 | make a small text call only on the small-call route it was handed, as a Driver run with `--tools none` and no chat session, make classifications only through `arbol-classifier`, and never fail an Exchange because a small call is missing, slow or fails | New | contract: R19 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `WholeExchange.test_with_a_small_call_route_no_small_call_is_made_and_the_route_stays_as_handed` (SYL-171) |
 | RCT-2.11 | when the database cannot be reached, keep what is not saved in `events.jsonl` and try again every 5 seconds while the agent works, try for 60 seconds to read what a run needs and then end the Exchange as failed with `database_unavailable`, and at the end try for 60 seconds before it ends and leaves its folder, giving every call to the database a limit of 5 seconds | Changed | contract, drill |
-| RCT-2.12 | on `settle`, refuse while the record's process lives, save what the folder holds by the rules of RCT-3 with the state of the end or else as interrupted, write no row in `messages` or `tool_calls` of an Exchange that was replaced, change no Exchange that has ended, remove the folder, a folder that another settle removed first being no error, and print the state the Exchange then has in the database | Changed | contract |
+| RCT-2.12 | on `settle`, refuse while the record's process lives, save what the folder holds by the rules of RCT-3 with the state of the end or else as interrupted, write no row in `messages` or `tool_calls` of an Exchange that was replaced, change no Exchange that has ended, remove the folder, a folder that another settle removed first being no error, and print the state the Exchange then has in the database | Changed | contract: R2 and R10 (SYL-174); also the Trivial Trunk’s unit `OpeningSettlement`, `ReplayingSettlement` and `SavingSettlement` in `trunks/trivial/tests/test_settle.py`; replaced Exchanges and concurrent-settle edges: R13 in SYL-175; the database away: R12 in SYL-177 |
 | RCT-2.13 | on `run --replaces`, accept only for the last Exchange of its chat that has ended and was not replaced, refuse a message or another chat with `invalid_input`, copy its message to the new Exchange, and in the transaction of the acceptance mark it replaced by the new one and delete its rows in `messages` and `tool_calls`, keeping its row in `exchanges` and its rows in `runs` | New | contract: R3, a message with `--replaces` (SYL-172); R14 comes with SYL-175 |
 
 The Root manager:
