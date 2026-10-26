@@ -29,6 +29,14 @@ Every statement in it can run again (`CREATE TABLE IF NOT EXISTS`), so running t
 
 A Build that talks to the database from Python uses psycopg 3, at a version pinned in that Build. Every call has a time limit of 5 seconds ([RCT-2](02-starting-stopping-and-settling.md#when-the-database-cannot-be-reached)). No Trunk and no backend creates, changes or removes a table, a column, an index or a check (ARC-1).
 
+<!-- sources:
+arbol:src/arbol_roots/sql.py#layout
+arbol:src/arbol_roots/sql.py#migrate
+arbol:src/arbol_roots/database.py#Database.file
+arbol:tests/test_roots_sql.py
+arbol:scripts/roots_sql_drill.py#drill
+-->
+
 ### The tables
 
 **`chats`: one row for each chat.** The Trunk that accepts a chat's first message writes `id` and `created_at`. `title` is NULL while the chat has none; no placeholder is ever stored as a title.
@@ -171,7 +179,7 @@ The layout:
 
 | ID | The layout must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-3.6 | be one file, `contract/<version>/layout.sql` in the `arbol-root` repository, of statements that can run again, with a comment on every table and column, run with `psql` on a Root's database by `arbol-roots` alone, and otherwise only on a database server of a test's or a check's own (RCT-4, RTM-1, TRV-0) | New | unit: `Layout.test_the_file_is_the_interface_of_rct_3`, `Layout.test_runs_twice_and_the_second_run_changes_nothing`, `Layout.test_every_table_and_column_has_a_comment`, `Layout.test_a_second_open_exchange_in_a_chat_is_refused`, `Layout.test_a_second_exchange_with_the_same_number_is_refused`, `Layout.test_a_failed_exchange_without_a_cause_is_refused`, `Layout.test_a_run_of_an_unknown_kind_is_refused`, `Layout.test_the_deletion_of_a_chat_that_has_exchanges_is_refused`, `Layout.test_nul_and_a_lone_half_of_a_surrogate_pair_are_refused_and_u_fffd_is_stored`, in `contract/conformance/tests/test_layout.py`, on a server of the test's own (SYL-170); that `arbol-roots` alone runs it on a Root's database: SYL-185 |
+| RCT-3.6 | be one file, `contract/<version>/layout.sql` in the `arbol-root` repository, of statements that can run again, with a comment on every table and column, run with `psql` on a Root's database by `arbol-roots` alone, and otherwise only on a database server of a test's or a check's own (RCT-4, RTM-1, TRV-0) | New | unit: `Layout.test_the_file_is_the_interface_of_rct_3`, `Layout.test_runs_twice_and_the_second_run_changes_nothing`, `Layout.test_every_table_and_column_has_a_comment`, `Layout.test_a_second_open_exchange_in_a_chat_is_refused`, `Layout.test_a_second_exchange_with_the_same_number_is_refused`, `Layout.test_a_failed_exchange_without_a_cause_is_refused`, `Layout.test_a_run_of_an_unknown_kind_is_refused`, `Layout.test_the_deletion_of_a_chat_that_has_exchanges_is_refused`, `Layout.test_nul_and_a_lone_half_of_a_surrogate_pair_are_refused_and_u_fffd_is_stored`, in `contract/conformance/tests/test_layout.py`, on a server of the test's own (SYL-170); runtime application: `roots.layout`, `roots.layout-cli`, `roots.sql-preflight`, `roots.sql-failure`, `roots.sql-timeout`, `roots.migrate`, `roots.migrate-refusal`, and explicit installed-server `roots.runtime-sql` using private Roots/databases (SYL-185) |
 
 Arbol:
 
