@@ -61,6 +61,11 @@ id        chat_id   number  state      error                         trunk    bu
 
 One writer for each table is the rule (ARC-D10), and the Trunks are that one writer, whichever Trunk it is: each writes only the rows of the Exchange it runs or settles, and, when it accepts a message sent again, marks the Exchange that message replaces and deletes that Exchange's messages and tool calls. Two exceptions remain, as ARC-0 states them. The title: Arbol writes it when the Leather Bag changes it, and a Trunk that makes titles writes it under the rule of its own specification, which keeps it from replacing a title the Leather Bag wrote. And the migration script of a new Root, which fills every table once before the Root is used, writes an Exchange that was open at the time of the migration as `interrupted`, and keeps the record of where each chat came from in the table `migrated_chats` of the Root's own layout (RTM-1).
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.accept
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.end
+-->
+
 ### How lines become rows
 
 A Trunk writes a row from the line of `events.jsonl` that carries it, once the line is in the file ([RCT-1](01-the-exchange-folder.md#the-answer-as-it-arrives-eventsjsonl)), and settling writes the same rows from the same lines ([RCT-2](02-starting-stopping-and-settling.md#settling)). The rule is the same for every Trunk:
@@ -108,6 +113,13 @@ While the folder of an Exchange exists, its answer is read from its `events.json
 
 A replaced Exchange is never shown and never sent to an agent: a Trunk leaves every replaced Exchange out of the history it sends its agent, so a message sent again runs as if the first answer had never been.
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.accept
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/history.py#make_history
+arbol-trunk:trunks/trivial/tests/test_replacement.py#ReplacementHistory
+arbol-root:contract/conformance/rct_conformance/scenarios/r14.py
+-->
+
 ### Columns and `jsonb`
 
 | Kept as | What | Why |
@@ -135,8 +147,8 @@ A Trunk:
 | RCT-3.3 | write the Leather Bag's message at position 0 exactly as it was sent, and each block of the answer exactly as the Driver's `text` event carried it, apart from the replacements of RCT-3.10 | Kept | contract: R1 (SYL-171) |
 | RCT-3.10 | replace the character U+0000 and every half of a surrogate pair that stands alone with U+FFFD in every value it writes, and change nothing else | New | contract |
 | RCT-3.11 | try no row of the answer again that the database refused with an error of the SQLSTATE class 22 or 23, leave it out, and end an Exchange whose end is not yet written as failed with `trunk_failed`, naming the line | New | unit |
-| RCT-3.4 | change no row of an Exchange that has ended, except to set its `replaced_by` once, and delete no row, except the rows in `messages` and `tool_calls` of the Exchange that a message sent again replaces, deleted by the Trunk that accepts that message | New | contract |
-| RCT-3.9 | leave every replaced Exchange out of the history it sends an agent | New | contract |
+| RCT-3.4 | change no row of an Exchange that has ended, except to set its `replaced_by` once, and delete no row, except the rows in `messages` and `tool_calls` of the Exchange that a message sent again replaces, deleted by the Trunk that accepts that message | New | contract: R13 and R14 (SYL-175); unit: `ReplacingAMessage` and `SavingSettlement` in `trunks/trivial/tests/` of `arbol-trunk` |
+| RCT-3.9 | leave every replaced Exchange out of the history it sends an agent | New | contract: R14 (SYL-175); unit: `History` and `ReplacementHistory` in `trunks/trivial/tests/` of `arbol-trunk` |
 
 The layout:
 

@@ -54,6 +54,12 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Lifecycle of one Exchange`
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/accept.py#accept_message
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.accept
+arbol-root:contract/conformance/rct_conformance/scenarios/r14.py#refused
+-->
+
 ### A repeat after a lost answer
 
 A caller that chose the Exchange's identifier can start the same Exchange again when it lost the answer, for example when `arbol-root` was killed before it read the acceptance line ([RCT-D17](#decisions)). The Trunk looks for the identifier before it makes any identifier of its own:
@@ -75,6 +81,15 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 
 - `arbol_deprecated_v1:grafts/arbol-trunks/m8-installed-acceptance.md#2026-09-01 — Installed failed-Turn acceptance exposed exact-duplicate edit defect; source follow-up committed`
 - `arbol_deprecated_v1:grafts/arbol-trunks/m8-installed-acceptance.md#2026-09-01 continuation — duplicate edit redrive diagnosis and fix`
+
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/accept.py#find_prior
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/claim.py#claim_folder
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/claim.py#root_lock
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/process.py#process_alive
+arbol-trunk:trunks/trivial/tests/test_repeat.py#Repeats
+arbol-root:contract/conformance/rct_conformance/scenarios/r4.py
+-->
 
 ### In the background, or in the foreground
 
@@ -206,6 +221,14 @@ For example, while the database server restarts for 20 seconds in the middle of 
 
 ```sh
 arbol-trunk --root sapling trivial -v 4 settle 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/claim.py#root_lock
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/process.py#process_alive
+arbol-trunk:trunks/trivial/tests/test_settle.py#SavingSettlement
+arbol-root:contract/conformance/rct_conformance/scenarios/r13.py
+-->
+
 # {"exchange":"7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b","settled":"interrupted"}
 ```
 
@@ -249,6 +272,15 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Retry and Continue from failure point`
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/accept.py#find_replacement
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#checked_replacement
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.replacement
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.accept
+arbol-trunk:trunks/trivial/tests/test_replacement.py#ReplacingAMessage
+arbol-root:contract/conformance/rct_conformance/scenarios/r14.py
+-->
+
 ### How the Root manager uses a Trunk
 
 | What | How |
@@ -267,13 +299,13 @@ A Trunk:
 | ID | A Trunk must… | Origin | Verified by |
 |---|---|---|---|
 | RCT-2.1 | count a message as accepted only when its folder is in place and the chat, the Exchange with the state `open` and the message are in the database, written in one transaction, and only then write the acceptance line | Changed | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Acceptances`, `AcceptingAMessage` (SYL-171) |
-| RCT-2.2 | answer a start within 15 seconds, end all work with the database for the acceptance within 10 seconds of the start, and refuse with one error line and the exit status 1, leaving no folder and no row and starting nothing, in every case of the table of refusals | Changed | contract: R3 (SYL-172); R4 and R14, with the last refusals of the table, come with SYL-175; also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `WholeStart`, `InvalidInput`, `NoDriver`, `TheRootTheKeychainAndTheFolder` and `TheDatabaseAtAcceptance` (SYL-172) |
+| RCT-2.2 | answer a start within 15 seconds, end all work with the database for the acceptance within 10 seconds of the start, and refuse with one error line and the exit status 1, leaving no folder and no row and starting nothing, in every case of the table of refusals | Changed | contract: R3 (SYL-172), R4 and R14 (SYL-175), covering every refusal; unit in the Trivial Trunk: `WholeStart`, `InvalidInput`, `NoDriver`, `TheRootTheKeychainAndTheFolder`, `TheDatabaseAtAcceptance`, `Repeats` and `ReplacingAMessage` |
 | RCT-2.17 | refuse a message with `chat_busy` exactly when its chat has an open Exchange or another message to that chat is accepted at the same moment | Changed | contract: R3, a chat with an open Exchange (SYL-172), and R5, two messages at the same moment (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Acceptances.test_a_chat_with_an_open_exchange_is_busy_and_names_it` (SYL-171), `TheDatabaseAtAcceptance.test_a_chat_with_an_open_exchange_is_busy_and_the_refusal_names_it` (SYL-172) |
-| RCT-2.3 | look for a handed Exchange identifier in the database and in the Root's folder, under its name and under `.<exchange>.new`, before it makes any identifier; answer with that Exchange's acceptance and `"duplicate": true` when the database has it; refuse with `in_progress` while another start of it lives or is less than 15 seconds old; and remove a folder whose start died before the database had it and go on as a new Exchange | Changed | contract |
-| RCT-2.18 | when two starts of the same Exchange identifier meet, let only the one that renamed its folder into place go on, and refuse the other with `in_progress` after removing what it made | New | contract |
+| RCT-2.3 | look for a handed Exchange identifier in the database and in the Root's folder, under its name and under `.<exchange>.new`, before it makes any identifier; answer with that Exchange's acceptance and `"duplicate": true` when the database has it; refuse with `in_progress` while another start of it lives or is less than 15 seconds old; and remove a folder whose start died before the database had it and go on as a new Exchange | Changed | contract: R4 (SYL-175); unit: `Repeats` in `trunks/trivial/tests/test_repeat.py` of `arbol-trunk` |
+| RCT-2.18 | when two starts of the same Exchange identifier meet, let only the one that renamed its folder into place go on, and refuse the other with `in_progress` after removing what it made | New | contract: R4 (SYL-175); unit: `Repeats.test_two_starts_of_one_identifier_leave_only_the_winners_folder_and_acceptance` and `Repeats.test_another_process_cannot_claim_while_the_root_is_locked_and_its_wait_is_bounded` |
 | RCT-2.4 | with `--detach`, point its standard input, output and error at `/dev/null` after the acceptance line, ignore SIGHUP, and finish the Exchange without its starter, Arbol, the Root manager or the database | Changed | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Background` (SYL-171); drill: SYL-187 |
 | RCT-2.5 | without `--detach`, write every line it appends to `events.jsonl` on standard output too, and end with the exit status 0 for completed, 1 for failed and 2 for cancelled | New | contract: R2 (SYL-174); also the Trivial Trunk’s unit `WholeExchange.test_foreground_exit_status_follows_the_exchange_end` |
-| RCT-2.19 | let standard output never hold up, change or end the Exchange: leave out a line it cannot take at once, and write nothing more there after a write has failed | New | contract: R2 (SYL-174); also the Trivial Trunk’s unit `ForegroundOutput` in `trunks/trivial/tests/test_output.py`; repeats: R4 in SYL-175 |
+| RCT-2.19 | let standard output never hold up, change or end the Exchange: leave out a line it cannot take at once, and write nothing more there after a write has failed | New | contract: R2 (SYL-174) and R4 (SYL-175), including a starter that closes its pipe before acceptance; unit: `ForegroundOutput` in `trunks/trivial/tests/test_output.py` of `arbol-trunk` |
 | RCT-2.6 | lead a process group of its own and keep in it every process it starts itself for the Exchange | New | contract |
 | RCT-2.7 | on a stop line, hand the stop to its run and stop a small call that runs, start no run that had not started, and write its end to its folder within 18 seconds of the line, `cancelled` unless the run had ended otherwise before the stop reached it | Changed | contract: R8 (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `StoppingTheRun`, `WholeExchange.test_after_a_stop_line_before_the_run_no_run_starts_and_the_exchange_is_cancelled`, `WholeExchange.test_a_stop_line_while_a_tool_call_runs_cancels_the_exchange_and_saves_the_call_as_interrupted` (SYL-173); the Trivial Trunk makes no small call (TRV-0.8) |
 | RCT-2.8 | on SIGTERM, on SIGINT, and in the foreground on SIGHUP, end its process group with SIGTERM and 5 seconds later SIGKILL, and write no end | New | contract: R2 and R10 (SYL-174); also the Trivial Trunk’s unit `Termination` and `Background` |
@@ -283,8 +315,8 @@ A Trunk:
 | RCT-2.21 | end a Driver run that gave no event for one minute longer than its idle limit, counted with `CLOCK_UPTIME_RAW`, while no tool call or question was open and, where its own specification says how it tells one, no command left in the background (RCT-D30), and end the Exchange as failed with `driver_silent` | New | contract |
 | RCT-2.22 | make a small text call only on the small-call route it was handed, as a Driver run with `--tools none` and no chat session, make classifications only through `arbol-classifier`, and never fail an Exchange because a small call is missing, slow or fails | New | contract: R19 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `WholeExchange.test_with_a_small_call_route_no_small_call_is_made_and_the_route_stays_as_handed` (SYL-171) |
 | RCT-2.11 | when the database cannot be reached, keep what is not saved in `events.jsonl` and try again every 5 seconds while the agent works, try for 60 seconds to read what a run needs and then end the Exchange as failed with `database_unavailable`, and at the end try for 60 seconds before it ends and leaves its folder, giving every call to the database a limit of 5 seconds | Changed | contract, drill |
-| RCT-2.12 | on `settle`, refuse while the record's process lives, save what the folder holds by the rules of RCT-3 with the state of the end or else as interrupted, write no row in `messages` or `tool_calls` of an Exchange that was replaced, change no Exchange that has ended, remove the folder, a folder that another settle removed first being no error, and print the state the Exchange then has in the database | Changed | contract: R2 and R10 (SYL-174); also the Trivial Trunk’s unit `OpeningSettlement`, `ReplayingSettlement` and `SavingSettlement` in `trunks/trivial/tests/test_settle.py`; replaced Exchanges and concurrent-settle edges: R13 in SYL-175; the database away: R12 in SYL-177 |
-| RCT-2.13 | on `run --replaces`, accept only for the last Exchange of its chat that has ended and was not replaced, refuse a message or another chat with `invalid_input`, copy its message to the new Exchange, and in the transaction of the acceptance mark it replaced by the new one and delete its rows in `messages` and `tool_calls`, keeping its row in `exchanges` and its rows in `runs` | New | contract: R3, a message with `--replaces` (SYL-172); R14 comes with SYL-175 |
+| RCT-2.12 | on `settle`, refuse while the record's process lives, save what the folder holds by the rules of RCT-3 with the state of the end or else as interrupted, write no row in `messages` or `tool_calls` of an Exchange that was replaced, change no Exchange that has ended, remove the folder, a folder that another settle removed first being no error, and print the state the Exchange then has in the database | Changed | contract: R2 and R10 (SYL-174), R13 (SYL-175); unit: `OpeningSettlement`, `ReplayingSettlement` and `SavingSettlement` in `trunks/trivial/tests/test_settle.py` of `arbol-trunk`; the database-away case remains R12 in SYL-177 |
+| RCT-2.13 | on `run --replaces`, accept only for the last Exchange of its chat that has ended and was not replaced, refuse a message or another chat with `invalid_input`, copy its message to the new Exchange, and in the transaction of the acceptance mark it replaced by the new one and delete its rows in `messages` and `tool_calls`, keeping its row in `exchanges` and its rows in `runs` | New | contract: R3 (SYL-172) and R14 (SYL-175), including races with a next message and with another replacement; unit: `ReplacingAMessage` in `trunks/trivial/tests/test_replacement.py` of `arbol-trunk` |
 
 The Root manager:
 

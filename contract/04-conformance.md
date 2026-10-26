@@ -76,6 +76,13 @@ One program for every Trunk, part of the suite: `contract/conformance/standin/dr
 | R18 | A Driver that falls silent, at the default scale of 10, about 96 seconds: the stand-in gives no event for its idle limit and a minute (divided), with nothing open | The stand-in got a stop and the Exchange failed with `driver_silent` | RCT-2.21 |
 | R19 | Small calls: a start without a small-call route; one with a route whose small call completes; one whose small call fails | Without a route, no run with `"tools": "none"`; a small call that ran was a run with `"tools": "none"` on the route handed, and left a `smallRun` line and a `runs` row of the kind `small` with its usage; the Exchange completed in every part. A Trunk that makes no small call passes when every part completes | RCT-1.11, 2.22 |
 
+<!-- sources:
+arbol-root:contract/conformance/rct_conformance/scenarios/r4.py
+arbol-root:contract/conformance/rct_conformance/scenarios/r13.py
+arbol-root:contract/conformance/rct_conformance/scenarios/r14.py
+arbol-root:contract/conformance/rct_conformance/registry.py
+-->
+
 ### How a Trunk Build's check runs it
 
 A Trunk's `arbol-build.json` names the suite as its check of the kind `contract`, once for each version in its `rootContracts`. It runs the suite from `~/repos/sylvan-stack/readonly/arbol-root`, the clone of the last merged `main` ([BLD-D18](../../arbol/builds/00-builds-and-versions.md#decisions)). The check starts the Build's own program, not the launcher, as every check does (BLD-0):
