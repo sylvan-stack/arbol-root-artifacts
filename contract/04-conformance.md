@@ -91,6 +91,9 @@ arbol-root:contract/conformance/rct_conformance/scenarios/r14.py
 arbol-root:contract/conformance/rct_conformance/registry.py
 arbol-root:contract/conformance/rct_conformance/scenarios/r6.py
 arbol-root:contract/conformance/rct_conformance/scenarios/r7.py
+arbol-root:contract/conformance/rct_conformance/scenarios/r11.py
+arbol-root:contract/conformance/rct_conformance/scenarios/r12.py
+arbol-root:contract/conformance/rct_conformance/scenarios/r17.py
 -->
 
 ### How a Trunk Build's check runs it

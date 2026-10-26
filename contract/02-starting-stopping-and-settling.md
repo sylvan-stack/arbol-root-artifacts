@@ -192,6 +192,15 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Known problems and lessons`
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Cancel`
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/run.py#run_accepted
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/run.py#drive
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/end.py#end_of_run
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/end.py#save_end
+arbol-trunk:trunks/trivial/tests/test_run.py#WholeExchange
+arbol-root:contract/conformance/rct_conformance/scenarios/r11.py
+-->
+
 ### A Driver that falls silent
 
 A Driver ends a silent vendor tool by itself, but the Driver's own process can hang too (ARC-3). A Trunk therefore ends a Driver run that has given no event for one minute longer than its idle limit, 15 minutes unless the run's request set another (DRV-4), counted with `CLOCK_UPTIME_RAW` as in [RCT-1](01-the-exchange-folder.md#the-trunk-watches-itself), while no tool call and no question is open and, where its own specification says how it tells one, no command left in the background. It stops the run, ending the Driver's process when it does not stop, and ends the Exchange as failed with the cause `driver_silent`.
@@ -219,6 +228,17 @@ Every call to the database has a time limit of 5 seconds, to connect and for eac
 
 For example, while the database server restarts for 20 seconds in the middle of an answer, the answer keeps arriving in the file and in the window, and the rows of those 20 seconds are saved, in order, once the server is back.
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/saver.py#Saver
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#within_limit
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#transaction
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/end.py#save_end
+arbol-trunk:trunks/trivial/tests/test_saver.py#Saving
+arbol-trunk:trunks/trivial/tests/test_database.py#Limit
+arbol-trunk:trunks/trivial/tests/test_end.py#SavingTheEnd
+arbol-root:contract/conformance/rct_conformance/scenarios/r12.py
+-->
+
 ### Settling
 
 *Settling* saves what the folder of an Exchange holds once its process is gone. It is the command `settle` of a Trunk Build:
@@ -231,6 +251,9 @@ arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/claim.py#root_lock
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/process.py#process_alive
 arbol-trunk:trunks/trivial/tests/test_settle.py#SavingSettlement
 arbol-root:contract/conformance/rct_conformance/scenarios/r13.py
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.end
+arbol-root:contract/conformance/rct_conformance/scenarios/r11.py#folder_failure
+arbol-root:contract/conformance/rct_conformance/scenarios/r12.py#through_the_end
 -->
 
 # {"exchange":"7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b","settled":"interrupted"}
@@ -313,13 +336,13 @@ A Trunk:
 | RCT-2.6 | lead a process group of its own and keep in it every process it starts itself for the Exchange | New | contract: R7 (SYL-176); unit: `Capabilities.test_capability_queries_and_the_run_launcher_stay_in_the_callers_process_group`, `Background` and `Termination` in `trunks/trivial/tests/` of `arbol-trunk` |
 | RCT-2.7 | on a stop line, hand the stop to its run and stop a small call that runs, start no run that had not started, and write its end to its folder within 18 seconds of the line, `cancelled` unless the run had ended otherwise before the stop reached it | Changed | contract: R8 (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `StoppingTheRun`, `WholeExchange.test_after_a_stop_line_before_the_run_no_run_starts_and_the_exchange_is_cancelled`, `WholeExchange.test_a_stop_line_while_a_tool_call_runs_cancels_the_exchange_and_saves_the_call_as_interrupted` (SYL-173); the Trivial Trunk makes no small call (TRV-0.8) |
 | RCT-2.8 | on SIGTERM, on SIGINT, and in the foreground on SIGHUP, end its process group with SIGTERM and 5 seconds later SIGKILL, and write no end | New | contract: R2 and R10 (SYL-174); also the Trivial Trunk’s unit `Termination` and `Background` |
-| RCT-2.9 | end every accepted Exchange exactly once, on every path, with no other component accepting or confirming the end | Changed | contract: R1 (SYL-171); R11 comes with SYL-177; drill: SYL-187 |
-| RCT-2.20 | end an Exchange in this order: the end in its folder, then the rows not yet saved and the final state in one transaction that changes only an open Exchange, then the folder removed; and when the folder cannot be written, end it as failed with `folder_unwritable` straight in the database and leave the folder | New | contract: R1 (SYL-171); R11 comes with SYL-177; also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `SavingTheEnd` (SYL-171); drill: SYL-187 |
-| RCT-2.10 | end an Exchange whose run met a rate limit as failed with the Driver's error kept whole, and start no run on another route | Changed | contract |
+| RCT-2.9 | end every accepted Exchange exactly once, on every path, with no other component accepting or confirming the end | Changed | contract: R1 (SYL-171) and R11 (SYL-177); unit: `WholeExchange` in `trunks/trivial/tests/test_run.py` of `arbol-trunk`; installed drill remains SYL-187 |
+| RCT-2.20 | end an Exchange in this order: the end in its folder, then the rows not yet saved and the final state in one transaction that changes only an open Exchange, then the folder removed; and when the folder cannot be written, end it as failed with `folder_unwritable` straight in the database and leave the folder | New | contract: R1 (SYL-171) and R11 (SYL-177), including a folder made read-only during a tool call and later settled; unit: `SavingTheEnd`, `WholeExchange` and `RejectedRows`; installed drill remains SYL-187 |
+| RCT-2.10 | end an Exchange whose run met a rate limit as failed with the Driver's error kept whole, and start no run on another route | Changed | contract: R11 (SYL-177); unit: `WholeExchange.test_a_failed_run_keeps_the_drivers_error_whole` and `WholeExchange.test_a_refusal_can_be_the_only_event_and_no_other_route_is_tried`, in `trunks/trivial/tests/test_run.py` of `arbol-trunk` |
 | RCT-2.21 | end a Driver run that gave no event for one minute longer than its idle limit, counted with `CLOCK_UPTIME_RAW`, while no tool call or question was open and, where its own specification says how it tells one, no command left in the background (RCT-D30), and end the Exchange as failed with `driver_silent` | New | contract |
 | RCT-2.22 | make a small text call only on the small-call route it was handed, as a Driver run with `--tools none` and no chat session, make classifications only through `arbol-classifier`, and never fail an Exchange because a small call is missing, slow or fails | New | contract: R19 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `WholeExchange.test_with_a_small_call_route_no_small_call_is_made_and_the_route_stays_as_handed` (SYL-171) |
-| RCT-2.11 | when the database cannot be reached, keep what is not saved in `events.jsonl` and try again every 5 seconds while the agent works, try for 60 seconds to read what a run needs and then end the Exchange as failed with `database_unavailable`, and at the end try for 60 seconds before it ends and leaves its folder, giving every call to the database a limit of 5 seconds | Changed | contract, drill |
-| RCT-2.12 | on `settle`, refuse while the record's process lives, save what the folder holds by the rules of RCT-3 with the state of the end or else as interrupted, write no row in `messages` or `tool_calls` of an Exchange that was replaced, change no Exchange that has ended, remove the folder, a folder that another settle removed first being no error, and print the state the Exchange then has in the database | Changed | contract: R2 and R10 (SYL-174), R13 (SYL-175); unit: `OpeningSettlement`, `ReplayingSettlement` and `SavingSettlement` in `trunks/trivial/tests/test_settle.py` of `arbol-trunk`; the database-away case remains R12 in SYL-177 |
+| RCT-2.11 | when the database cannot be reached, keep what is not saved in `events.jsonl` and try again every 5 seconds while the agent works, try for 60 seconds to read what a run needs and then end the Exchange as failed with `database_unavailable`, and at the end try for 60 seconds before it ends and leaves its folder, giving every call to the database a limit of 5 seconds | Changed | contract: R12 (SYL-177), with recovery during work, after an outage immediately after acceptance, and by settling after the final retry budget; unit: `Saving`, `SavingTheEnd` and `Limit` in `trunks/trivial/tests/` of `arbol-trunk`, including moved-clock retries and the unscaled call limit; installed drill remains SYL-187 |
+| RCT-2.12 | on `settle`, refuse while the record's process lives, save what the folder holds by the rules of RCT-3 with the state of the end or else as interrupted, write no row in `messages` or `tool_calls` of an Exchange that was replaced, change no Exchange that has ended, remove the folder, a folder that another settle removed first being no error, and print the state the Exchange then has in the database | Changed | contract: R2 and R10 (SYL-174), R13 (SYL-175), R11 and R12 (SYL-177); unit: `OpeningSettlement`, `ReplayingSettlement`, `SavingSettlement` and `RejectedRows` in `trunks/trivial/tests/` of `arbol-trunk` |
 | RCT-2.13 | on `run --replaces`, accept only for the last Exchange of its chat that has ended and was not replaced, refuse a message or another chat with `invalid_input`, copy its message to the new Exchange, and in the transaction of the acceptance mark it replaced by the new one and delete its rows in `messages` and `tool_calls`, keeping its row in `exchanges` and its rows in `runs` | New | contract: R3 (SYL-172) and R14 (SYL-175), including races with a next message and with another replacement; unit: `ReplacingAMessage` in `trunks/trivial/tests/test_replacement.py` of `arbol-trunk` |
 
 The Root manager:

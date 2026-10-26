@@ -94,6 +94,17 @@ PostgreSQL can store neither the character U+0000 nor one half of a surrogate pa
 
 A row of the answer that the database refuses for what it holds, with an error of the SQLSTATE class 22 (a value it cannot take) or 23 (a key or a check), is not tried again, because it would be refused for ever and hold up every row after it. The Trunk, and settling, leave that row out. An Exchange whose end is not yet written then ends as failed with the cause `trunk_failed`, whose message names the line `n`; an end already written stands. Either way the chat takes a new message once the end is saved.
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/storage.py#stored
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/rows.py#RowMaker
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.save
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.end
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/saver.py#Saver
+arbol-trunk:trunks/trivial/tests/test_storage.py#Storage
+arbol-trunk:trunks/trivial/tests/test_rejected.py#RejectedRows
+arbol-root:contract/conformance/rct_conformance/scenarios/r17.py
+-->
+
 ### How a chat is read
 
 A reader puts a chat together without knowing which Trunk wrote it. It leaves out every Exchange that was replaced, and orders by the Exchange's number and the position within it:
@@ -145,8 +156,8 @@ A Trunk:
 | RCT-3.1 | write rows only into `chats`, `exchanges`, `messages`, `tool_calls` and `runs`, only for the Exchange it runs or settles and, when it accepts a message sent again, the Exchange that message replaces (RCT-3.4), with SQL of its own, and create, change or remove no table, column, index or check | Changed | contract: R16 after every scenario, R1 and R19 (SYL-171) |
 | RCT-3.2 | write each row by the rules of *How lines become rows* as soon as the line it comes from is in `events.jsonl`, with an insert that does nothing when the row is already there | Changed | contract: R1 (SYL-171), and R8 and R9 for the row of a question (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Rows`, `Saving` (SYL-171), `Questions` (SYL-173) |
 | RCT-3.3 | write the Leather Bag's message at position 0 exactly as it was sent, and each block of the answer exactly as the Driver's `text` event carried it, apart from the replacements of RCT-3.10 | Kept | contract: R1 (SYL-171) |
-| RCT-3.10 | replace the character U+0000 and every half of a surrogate pair that stands alone with U+FFFD in every value it writes, and change nothing else | New | contract |
-| RCT-3.11 | try no row of the answer again that the database refused with an error of the SQLSTATE class 22 or 23, leave it out, and end an Exchange whose end is not yet written as failed with `trunk_failed`, naming the line | New | unit |
+| RCT-3.10 | replace the character U+0000 and every half of a surrogate pair that stands alone with U+FFFD in every value it writes, and change nothing else | New | contract: R17 (SYL-177), including NUL and split/whole emoji in messages, nested tool JSON, both routes, usage and started; unit: `Storage` in `trunks/trivial/tests/test_storage.py` of `arbol-trunk` |
+| RCT-3.11 | try no row of the answer again that the database refused with an error of the SQLSTATE class 22 or 23, leave it out, and end an Exchange whose end is not yet written as failed with `trunk_failed`, naming the line | New | unit: `RejectedRows` in `trunks/trivial/tests/test_rejected.py` and `WholeExchange.test_a_refused_row_stops_the_driver_and_fails_the_exchange_naming_its_line` in `test_run.py` of `arbol-trunk` (SYL-177); planted SQLSTATE 22/23 failures, following rows saved, and an already written end preserved |
 | RCT-3.4 | change no row of an Exchange that has ended, except to set its `replaced_by` once, and delete no row, except the rows in `messages` and `tool_calls` of the Exchange that a message sent again replaces, deleted by the Trunk that accepts that message | New | contract: R13 and R14 (SYL-175); unit: `ReplacingAMessage` and `SavingSettlement` in `trunks/trivial/tests/` of `arbol-trunk` |
 | RCT-3.9 | leave every replaced Exchange out of the history it sends an agent | New | contract: R14 (SYL-175); unit: `History` and `ReplacementHistory` in `trunks/trivial/tests/` of `arbol-trunk` |
 
