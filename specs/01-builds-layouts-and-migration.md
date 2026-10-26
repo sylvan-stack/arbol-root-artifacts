@@ -132,6 +132,7 @@ arbol:src/arbol_roots/database.py#Database.file
 arbol:src/arbol_roots/database.py#Database._execute
 arbol:tests/test_roots_sql.py
 arbol:scripts/roots_sql_drill.py#drill
+arbol:src/arbol_roots/sql.py#migration_directory
 -->
 
 ### The Root's own layout
@@ -273,7 +274,7 @@ A migration script:
 
 | ID | A migration script must… | Origin | Verified by |
 |---|---|---|---|
-| RTM-1.6 | be one file, `roots/<root>/migrate.sql`, for the one step from the Root its Root grew from, run by `psql` connected to the new database with the variables `from_database` and `from_root`, and write files only in the folder it is run in | New | unit check `migration`: `root.migration-protocol`, `root.migration-protocol-refusal`, `root.migration-whole`, `root.migration-origin`; private Build integration `root.private-sql-builds` (SYL-184). Runtime: `roots.sql-selection`, `roots.sql-preflight`, `roots.sql-pruning`, `roots.sql-databases`, `roots.migrate`, `roots.migrate-failure`, `roots.migrate-refusal`, `roots.migrate-interruption`; explicit installed-server `roots.runtime-sql` (SYL-185) |
+| RTM-1.6 | be one file, `roots/<root>/migrate.sql`, for the one step from the Root its Root grew from, run by `psql` connected to the new database with the variables `from_database` and `from_root`, and write files only in the folder it is run in | New | unit check `migration`: `root.migration-protocol`, `root.migration-protocol-refusal`, `root.migration-whole`, `root.migration-origin`; private Build integration `root.private-sql-builds` (SYL-184). Runtime: `roots.sql-selection`, `roots.sql-preflight`, `roots.sql-pruning`, `roots.sql-databases`, `roots.migrate`, `roots.migrate-failure`, `roots.migrate-refusal`, `roots.migrate-interruption`, `roots.migrate-signals`; explicit installed-server `roots.runtime-sql` (SYL-185) |
 | RTM-1.7 | read the older database only in one transaction that is `REPEATABLE READ` and `READ ONLY` | Changed | unit check `migration`: `root.migration-protocol`, `root.migration-protocol-refusal`, `root.migration-whole` (validated READ ONLY/REPEATABLE READ source protocol, server-side write refusal and unchanged source rows/schema; SYL-184) |
 | RTM-1.8 | write the new database in one transaction, so that a failure leaves no row there | Changed | unit check `migration`: `root.migration-whole` (one destination transaction, missing-source and missing-table status 3, no target rows), `root.migration-protocol-refusal`; runtime rollback/status/preparing behavior: `roots.migrate-failure` and explicit installed-server `roots.runtime-sql` (SYL-185); real-Root drill remains SYL-189 |
 | RTM-1.9 | copy every row of a table that did not change, with the same identifiers and every text and `jsonb` value as it was, except as RTM-1.10 says | Changed | unit check `migration`: `root.migration-fixture`, `root.migration-whole`, `root.migration-text-fault` (all five unchanged tables, identifiers, Unicode/CRLF/tab/backslash/trailing spaces and nested JSON; SYL-184) |
