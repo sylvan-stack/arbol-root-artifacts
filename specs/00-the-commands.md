@@ -28,6 +28,13 @@ arbol-root -v 5 list              # Build 5 of arbol-root, in the Root its recor
 
 The replies the Root manager makes itself, those of `list`, `stop` and `settle`, name the Root as `root`; so do the reply of `trunks` and the acceptance line of `start`, which it passes on from `arbol-trunk`. A refusal has the form below and names no Root. The listing also names the build number and the package version of the `arbol-root` Build that made it, as `rootBuild` and `rootPackageVersion`, so the Root and the Build of its manager are never taken for each other (ARC-0, BLD-0). A newer Build of the same Root lists, stops and settles the Exchanges that an older Build started, because it knows them only from their records.
 
+<!-- sources:
+arbol-root:src/arbol_root/model.py#identity
+arbol-root:src/arbol_root/model.py#build_record
+arbol-root:src/arbol_root/model.py#object_file
+arbol-root:tests/test_commands.py#Commands
+-->
+
 ### The command line
 
 Implementation choices (RTM-D14): the program accepts its common options before or after the command, in either value form, and refuses duplicate options, missing values and surplus arguments. Development requires an explicit Root; it never chooses the current Root itself. A packaged program reads `build.json` beside its own package, independent of caller environment variables. A malformed Build record is `invalid_input`, never development mode. A missing, nonregular, unreadable or malformed Root record is `unknown_root`; an object must name the selected Root. These reads open no settings file.
@@ -56,12 +63,27 @@ Options are written `--name value` or `--name=value`, after the command. Each co
 | `unknown_trunk` | Passed on from `arbol-trunk` ([RCT-0](../contract/00-overview.md#the-command-arbol-trunk)) |
 | The codes of RCT-2 | Passed on from the Trunk: as the reply of `start`, and in the results of `settle` |
 
+<!-- sources:
+arbol-root:src/arbol_root/cli.py#parse
+arbol-root:src/arbol_root/cli.py#main
+arbol-root:bin/arbol-root
+arbol-root:bin/entry.py
+-->
+
 ### The Trunks that fit
 
 `arbol-root trunks [<code name>]` runs `arbol-trunk --root <root> [<code name>] list` and prints its first UTF-8 line that is a JSON object unchanged, including whitespace and extra refusal fields (RTM-D14). It forwards the child's standard error to standard error. A reply with an error or a nonzero child status returns 1; otherwise it returns 0. Diagnostic lines and non-object JSON lines are not replies. No object line is `trunk_unavailable`. The launcher already knows which Builds fit the Root and which one `run` would start (RCT-0), so the Root manager reads no Build record itself.
 
 ```sh
 arbol-root --root sapling trunks
+
+<!-- sources:
+arbol-root:src/arbol_root/cli.py#trunks
+arbol-root:tests/standin_trunk.py
+arbol-root:tests/test_commands.py#Commands.test_trunks_forwards_reply_bytes_exact_arguments_and_launcher_path
+arbol-root:scripts/verify_build.py#qualify
+-->
+
 # {"root":"sapling","rootContract":1,"trunks":[{"trunk":"trivial","default":true,"builds":[{"build":"4","status":"working","rootContracts":[1,2],"fits":true,"runnable":true,"chosen":true}]}]}
 ```
 
@@ -183,6 +205,10 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 
 The Root manager reads no settings file (RTM-D3). ARC-0 and BLD-0 gave its file, `~/.arbol/roots/<root>/arbol-root.json` (ARC-1), two jobs. The first, the default Trunk, is the Trivial Trunk in every Root ([RCT-D2](../contract/00-overview.md#decisions)). The second, narrowing which Builds may run, is gone: a Root limits nothing, and the Trunks it runs are those whose Builds list its Root Contract version, as `trunks` shows them (RCT-D28). The file is therefore not made, and its name is kept for the first setting the Root manager needs. For example, `~/.arbol/roots/sapling/` holds only `arbol.json`.
 
+<!-- sources:
+arbol-root:tests/test_commands.py#Commands.test_no_settings_or_exchange_payload_is_opened
+-->
+
 ### Tests
 
 The Root manager opens no database, so a test points it only at folders, with two options, as a Driver takes `--state-dir` ([ARC-1](../../arbol/architecture/01-roots.md#a-place-for-tests), [ARC-D37](../../arbol/architecture/01-roots.md#decisions), [RTM-D7](#decisions)):
@@ -198,15 +224,21 @@ The Root manager opens no database, so a test points it only at folders, with tw
 "$ARBOL_BUILD_DIR/bin/arbol-root" list --root-dir /tmp/rtm-1a2b/sapling --bin-dir /tmp/rtm-1a2b/bin
 ```
 
+<!-- sources:
+arbol-root:tests/test_commands.py
+arbol-root:scripts/check_build.py#main
+arbol-root:pyproject.toml
+-->
+
 ## Requirements
 
 The Root manager:
 
 | ID | The Root manager must… | Origin | Verified by |
 |---|---|---|---|
-| RTM-0.1 | take its Root from the `root` of its own Build record, or from `--root` only when it runs outside a Build, refuse with `invalid_input` a Root identifier that is not one lower-case word and with `unknown_root` a Root whose folder holds no `root.json`, and name that Root in every reply of `list`, `stop` and `settle` | New | unit |
-| RTM-0.2 | end every command, keep no file between two commands, read in an Exchange folder only `record.json`, write there only stop lines in `control`, remove only the folders that `settle` removes, open no request file and no database, and start no program but `arbol-trunk`, and `/bin/ps` in a clean environment and the C locale to read a process's start time | Changed | unit |
-| RTM-0.3 | on `trunks`, print the reply of `arbol-trunk --root <root> [<code name>] list` unchanged | New | unit |
+| RTM-0.1 | take its Root from the `root` of its own Build record, or from `--root` only when it runs outside a Build, refuse with `invalid_input` a Root identifier that is not one lower-case word and with `unknown_root` a Root whose folder holds no `root.json`, and name that Root in every reply of `list`, `stop` and `settle` | New | Root identity/refusal part: unit `root.identity`, `root.build-identity`, `root.input`; list/stop/settle replies remain SYL-182/SYL-183 |
+| RTM-0.2 | end every command, keep no file between two commands, read in an Exchange folder only `record.json`, write there only stop lines in `control`, remove only the folders that `settle` removes, open no request file and no database, and start no program but `arbol-trunk`, and `/bin/ps` in a clean environment and the C locale to read a process's start time | Changed | trunks/program boundary: unit `root.no-settings`, `root.trunks`, `root.trunk-unavailable`; no settings, request or database read. Exchange commands remain SYL-182/SYL-183 |
+| RTM-0.3 | on `trunks`, print the reply of `arbol-trunk --root <root> [<code name>] list` unchanged | New | unit: `root.trunks`, `root.trunks-refusal`; private integration: `root.private-build` in scripts/verify_build.py (SYL-181) |
 | RTM-0.4 | on `start`, take the Exchange's identifier only from `--exchange`, which the caller has to give, and start the Build named with `-v`, or else the one that `arbol-trunk … list` marks `chosen`, of the Trunk named as the one argument or else `trivial`, as `arbol-trunk --root <root> <code name> -v <build> run --detach --exchange <id> --request <file>` followed unchanged by the caller's `--chat`, `--replaces`, `--cwd`, `--driver`, `--subscription`, `--model` and `--effort`, in its own working folder, and refuse with `no_fit` when no Build is marked `chosen` | New | unit |
 | RTM-0.5 | on `start`, print the Trunk's one line unchanged, with the exit status 0 for an acceptance and 1 for a refusal, remove the request file once it has the line, and refuse with `no_answer`, leaving the file and the process alone, when no line that is a JSON object came within 20 seconds or the output ended without one | New | unit |
 | RTM-0.6 | on `list`, give every folder of `exchanges/` whose name does not start with a dot, from its record alone, with its Root, Exchange, chat, Trunk, Build, process and whether it lives, its state, its signs of life and its end, name its own build number and package version as `rootBuild` and `rootPackageVersion`, leave out a folder that is gone before its record is read, and name in `unreadable` every folder whose record is there but cannot be read | New | unit |
@@ -217,9 +249,9 @@ The Root manager:
 | RTM-0.11 | treat the stop of an Exchange without a folder as success, with `"ended": "none"`, and have an Exchange whose process is gone settled at once, without a stop line | Kept | unit |
 | RTM-0.12 | count the 20 seconds and the 5 seconds of a stop with `CLOCK_UPTIME_RAW` | New | unit |
 | RTM-0.13 | on `settle`, settle every Exchange whose record's process is gone, or only the one named, one after another, each through `arbol-trunk --root <root> trivial -v <build> settle <exchange>` with the Build that `arbol-trunk --root <root> trivial list` marks `chosen`, refuse with `no_fit` when none is marked, try no further Exchange after a refusal with `database_unavailable`, and, when no Exchange is named, remove every folder `.<exchange>.old` and every folder `.<exchange>.new` more than 15 seconds old whose record's process is gone or that has no record | New | unit |
-| RTM-0.14 | read no settings file | New | unit |
-| RTM-0.15 | take the Root's folder from `--root-dir` and the folder of the launchers from `--bin-dir` when they are given, start `arbol-trunk` from that folder with the folder first on the search path, and refuse `--root-dir` without `--bin-dir` | New | unit |
-| RTM-0.16 | refuse with `trunk_unavailable` when `arbol-trunk` cannot be started, or its `list` or `settle` ends without a line that is a JSON object | New | unit |
+| RTM-0.14 | read no settings file | New | unit: `root.no-settings` (SYL-181) |
+| RTM-0.15 | take the Root's folder from `--root-dir` and the folder of the launchers from `--bin-dir` when they are given, start `arbol-trunk` from that folder with the folder first on the search path, and refuse `--root-dir` without `--bin-dir` | New | unit: `root.identity`, `root.trunks`, `root.input` (SYL-181) |
+| RTM-0.16 | refuse with `trunk_unavailable` when `arbol-trunk` cannot be started, or its `list` or `settle` ends without a line that is a JSON object | New | list reply/start failure part: unit `root.trunk-unavailable`; settle remains SYL-183 |
 
 RTM-0.7 is checked against a listing kept in the repository, to which a later Build may only add fields. RTM-0.10's `not_ended` and RTM-0.12's clock are checked inside the program's own process, because no stand-in outlives SIGKILL or makes the Mac sleep.
 

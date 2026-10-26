@@ -37,6 +37,14 @@ One repository, `arbol-root`, holds the program and the SQL of every Root. The R
     <second>/migrate.sql         brings the chats of First Sapling into the second Root
 ```
 
+<!-- sources:
+arbol-root:arbol-build.json
+arbol-root:package.json
+arbol-root:roots/sapling/layout.sql
+arbol-root:scripts/package_build.py#package
+arbol-root:README.md
+-->
+
 ### Which Root a Build is made for
 
 `arbol-builds build` is told the Root ([RTM-D9](#decisions)):
@@ -48,6 +56,12 @@ arbol-roots migrate <second>                                     # runs the thre
 ```
 
 `--root` on `build` names the Root a Build of `arbol` or `arbol-root` is made for. `arbol-builds` writes it as `root` into the Build's record when the build starts, so the build commands and the checks find it there. `arbol-build.json` names no Root, because one repository serves every Root. [BLD-0](../../arbol/builds/00-builds-and-versions.md#what-a-repository-says-about-its-build) states this since 15 October 2026 (RTM-D9); before, it read the Root from `arbol-build.json`.
+
+<!-- sources:
+arbol-root:scripts/package_support.py#destination
+arbol-root:scripts/build.py#main
+arbol-root:src/arbol_root/model.py#build_record
+-->
 
 ### What a Build carries
 
@@ -70,6 +84,18 @@ A file it has to copy that is missing makes the build fail. RTM-D15 fixes the im
     root-tables.sql        roots/<second>/layout.sql
     migrate.sql            roots/<second>/migrate.sql
 ```
+
+<!-- sources:
+arbol-root:scripts/build.py#copy_layout
+arbol-root:scripts/package_build.py#archive
+arbol-root:scripts/package_build.py#package
+arbol-root:scripts/package_support.py#metadata
+arbol-root:scripts/package_support.py#write_manifest
+arbol-root:scripts/python-distribution.json
+arbol-root:.python-version
+arbol-root:tests/test_layout_copy.py
+arbol-root:tests/test_package.py
+-->
 
 ### How `arbol-roots` runs the files
 
@@ -95,6 +121,10 @@ psql --no-psqlrc --set ON_ERROR_STOP=1 --set from_database=arbol_sapling --set f
 `roots/<root>/layout.sql` holds the tables that only this Root has: Arbol's own tables, which Arbol's own specification states, and, for a Root that grew from another, `migrated_chats` ([below](#where-a-migrated-chat-came-from)). It follows the rules of the chat tables' file (RCT-3): every statement can run again, and every table and column has a comment. In the first thin path the file of the first Root may hold no statement at all.
 
 A later Build of the same Root may only add to this file what the Root's older Builds can ignore (ARC-1): a new table, and on a table that exists a column that may be NULL or has a default, or an index that is not unique. It adds no check, no unique index and no column that is NOT NULL without a default to a table that exists, because the writes of the older Builds would then fail. Each addition is a statement of its own that can run again, such as `ALTER TABLE drafts ADD COLUMN IF NOT EXISTS pinned boolean NOT NULL DEFAULT false`. A statement that an earlier Build carried is never edited: on a Root in use, `IF NOT EXISTS` would skip the edit, and a new database would differ from the one in use. Any other change needs a new Root (ARC-1). The chat tables of a Root Contract version have no additions in version 1 ([RCT-D24](../contract/03-the-chat-tables.md#decisions)).
+
+<!-- sources:
+arbol-root:roots/sapling/layout.sql
+-->
 
 ### The migration script
 
@@ -141,15 +171,24 @@ d4e5f607  sapling     d4e5f607   1              2026-10-15 11:02:00.000+00
 
 A database server of its own is made with `initdb` in a temporary folder, listens only on a socket in a short folder under `/tmp`, and is stopped and removed afterwards, as the Root Contract's suite does ([RCT-4](../contract/04-conformance.md#what-it-sets-up-for-every-scenario), [RTM-D13](#decisions)). The installed server is never used, so no check can reach the chats of a Root in use (ARC-1). A check that does not find `initdb`, `pg_ctl`, `createdb`, `psql` or `pg_dump` on the search path fails and names the program.
 
+<!-- sources:
+arbol-root:scripts/check_build.py#main
+arbol-root:scripts/package_support.py#verify
+arbol-root:scripts/verify_build.py#qualify
+arbol-root:tests/test_commands.py
+arbol-root:tests/test_layout_copy.py
+arbol-root:tests/test_package.py
+-->
+
 ## Requirements
 
 An `arbol-root` Build:
 
 | ID | An `arbol-root` Build must… | Origin | Verified by |
 |---|---|---|---|
-| RTM-1.1 | be made for the Root named with `arbol-builds build arbol-root --root <root>`, and carry `layout/chat-tables.sql`, a copy of `contract/<rootContract>/layout.sql` for its Root's version, `layout/root-tables.sql`, a copy of `roots/<root>/layout.sql`, and, exactly when its Root grew from another, `layout/migrate.sql`, a copy of `roots/<root>/migrate.sql` | New | unit |
-| RTM-1.2 | fail to build when a file it has to carry is missing from the repository | New | unit |
-| RTM-1.3 | have the checks `unit`, `layout` and `migration`, and run the last two only on a PostgreSQL server of the check's own in a temporary folder, listening only on a socket, never on the installed server | New | unit |
+| RTM-1.1 | be made for the Root named with `arbol-builds build arbol-root --root <root>`, and carry `layout/chat-tables.sql`, a copy of `contract/<rootContract>/layout.sql` for its Root's version, `layout/root-tables.sql`, a copy of `roots/<root>/layout.sql`, and, exactly when its Root grew from another, `layout/migrate.sql`, a copy of `roots/<root>/migrate.sql` | New | unit: `root.layout-copy`, `root.layout-lineage`, `root.layout-metadata`, `root.package`, `root.package-integrity`; private integration: `root.private-build` (SYL-181) |
+| RTM-1.2 | fail to build when a file it has to carry is missing from the repository | New | unit: `root.layout-missing`, `root.layout-lineage`; private integration: `root.private-build` missing-layout Build (SYL-181) |
+| RTM-1.3 | have the checks `unit`, `layout` and `migration`, and run the last two only on a PostgreSQL server of the check's own in a temporary folder, listening only on a socket, never on the installed server | New | unit delivery part: `root.package`, `root.package-pin`, `root.package-integrity` and `root.private-build`; layout/migration checks remain SYL-184 |
 
 The Root's own layout:
 
