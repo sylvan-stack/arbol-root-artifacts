@@ -26,6 +26,8 @@ Not covered: the folder of an Exchange ([RCT-1](01-the-exchange-folder.md)); acc
 | The Root manager | `arbol-root`, whose Builds are made for one Root. It starts Trunks, lists the Exchanges in progress from their folders, stops them, and has a Trunk Build settle an Exchange whose process is gone. It never opens the database (ARC-0). Its Builds carry the `layout.sql` of the Root's contract version ([RCT-3](03-the-chat-tables.md)), beside the Root's own layout for Arbol's tables, as `layout/chat-tables.sql` and `layout/root-tables.sql` ([RTM-1](../specs/01-builds-layouts-and-migration.md#what-a-build-carries)) |
 | The Arbol backend | The process of a Root's `arbol` Build that serves the [Leather Bag's](../../arbol/GLOSSARY.md#leather-bag) windows. It reads the chat tables with SQL, follows the answer that is still arriving in the folder of an Exchange, and writes the Leather Bag's answers to the agent's questions there (ARC-0) |
 
+The global catalogue `arbol-roots` creates the Root’s private `exchanges/` directory before publishing a new Root, and `ready` ensures it for an older Root without replacing existing contents (ARC-D70). Trunks may coordinate through its directory descriptor before making an Exchange; the directory exists even before the first message. A file or symlink in its place is refused.
+
 Who writes and who reads what this contract fixes:
 
 | What | Where | Written by | Read by |
