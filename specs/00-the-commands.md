@@ -30,6 +30,9 @@ The replies the Root manager makes itself, those of `list`, `stop` and `settle`,
 
 ### The command line
 
+Implementation choices (RTM-D14): the program accepts its common options before or after the command, in either value form, and refuses duplicate options, missing values and surplus arguments. Development requires an explicit Root; it never chooses the current Root itself. A packaged program reads `build.json` beside its own package, independent of caller environment variables. A malformed Build record is `invalid_input`, never development mode. A missing, nonregular, unreadable or malformed Root record is `unknown_root`; an object must name the selected Root. These reads open no settings file.
+
+
 A Trunk is named by its *code name*, such as `trivial` or `advanced` ([RCT-0](../contract/00-overview.md#trunks-and-their-code-names)).
 
 | Command | What it does | Prints | Exit status |
@@ -55,7 +58,7 @@ Options are written `--name value` or `--name=value`, after the command. Each co
 
 ### The Trunks that fit
 
-`arbol-root trunks [<code name>]` runs `arbol-trunk --root <root> [<code name>] list` and prints its reply unchanged. The launcher already knows which Builds fit the Root and which one `run` would start (RCT-0), so the Root manager reads no Build record itself.
+`arbol-root trunks [<code name>]` runs `arbol-trunk --root <root> [<code name>] list` and prints its first UTF-8 line that is a JSON object unchanged, including whitespace and extra refusal fields (RTM-D14). It forwards the child's standard error to standard error. A reply with an error or a nonzero child status returns 1; otherwise it returns 0. Diagnostic lines and non-object JSON lines are not replies. No object line is `trunk_unavailable`. The launcher already knows which Builds fit the Root and which one `run` would start (RCT-0), so the Root manager reads no Build record itself.
 
 ```sh
 arbol-root --root sapling trunks
@@ -306,3 +309,4 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 | RTM-D5 | Which Trunk Build settles an Exchange? | The Build of the Trivial Trunk that `arbol-trunk list` marks `chosen`, whichever Trunk ran the Exchange; when none is marked, nothing is settled. The Trivial Trunk is the most stable Trunk, and every Build that fits the Root settles alike (RCT-D20). The alternative: the Build that ran the Exchange, which may be the very Build whose defect ended it, or one that was removed | Decided 15 October 2026, a technical choice: the proposed default |
 | RTM-D6 | What does `stop` report, when the Root manager reads only the record and the folder goes soon after the end? | When it had the Exchange settled, the state settling printed. Otherwise the state of the end it read; `interrupted` when the record had no end and settling was refused; `saved` when the folder went before it could read the end, or settling printed `none`, which means the Exchange ended and its rows are saved, or it was never accepted; `none` when there was no folder. With what settling printed, when it had the Exchange settled. ARC-3 had sketched `ended` without `saved`. The alternative: the Root manager also reads the last line of `events.jsonl`, which ARC-0 leaves to the Arbol backend | Decided 15 October 2026, a technical choice: the proposed default |
 | RTM-D7 | How does a test point the Root manager at another folder and another database? | With options, as ARC-1 says for a Root's own Builds: `--root-dir` for the Root's folder and `--bin-dir` for the folder of the launchers, the second required with the first. The Root manager opens no database, so it has no option for one; the Trunks it starts find theirs through their home folder (RCT-0), and a test gives it a stand-in `arbol-trunk` instead. The alternative: a home folder of the test's own, as RCT-D29 decided for Trunks, which ARC-D37 does not provide for a Root's own Builds | Decided 15 October 2026, a technical choice: the proposed default, which keeps ARC-D37 |
+| RTM-D14 | How are command identity, option edges and Trunk replies made precise? | Common options before/after the command, no duplicates; own adjacent Build record with strict component/number/Root/version checks, never caller environment identity; missing/damaged/nonregular Root record is unknown_root; first UTF-8 JSON-object line forwarded byte for byte and child stderr preserved, success only with no error and status 0. No settings reads or current-Root fallback. The alternative is permissive last-value options and trusting caller Build variables, which can silently select another identity | Decided 26 October 2026, technical choice for SYL-181: the proposed default |
