@@ -1,7 +1,7 @@
 ---
 role: authored
 spec: RCT-4
-status: accepted
+status: implemented
 ---
 # Root Contract · 04 Conformance
 
@@ -110,12 +110,18 @@ A Trunk's `arbol-build.json` names the suite as its check of the kind `contract`
   "rootContracts": [1],
   "checks": [
     { "name": "contract-1", "kind": "contract",
-      "command": "\"$ARBOL_BUILD_DIR/<its Python>\" ~/repos/sylvan-stack/readonly/arbol-root/contract/conformance/bin/rct-conformance.py --trunk \"$ARBOL_BUILD_DIR/<its entry>\" --root-contract 1" }
+      "command": "\"$ARBOL_BUILD_DIR/<its Python>\" ~/repos/sylvan-stack/readonly/arbol-root/contract/conformance/bin/rct-conformance.py --trunk \"\\\"$ARBOL_BUILD_DIR/<its entry>\\\"\" --root-contract 1" }
   ]
 }
 ```
 
 `<its Python>` is the interpreter the Build carries and `<its entry>` the program its record names; both belong to the Trunk's own specification. A Build that does not pass every scenario for every version it lists is `failed` (BLD-0). A machine without the programs of PostgreSQL cannot check a Trunk Build.
+
+<!-- sources:
+arbol-trunk:trunks/trivial/arbol-build.json
+arbol-root:contract/conformance/bin/rct-conformance.py
+arbol-root:contract/conformance/rct_conformance/cli.py
+-->
 
 ## Requirements
 
@@ -131,7 +137,7 @@ A Trunk:
 
 | ID | A Trunk must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-4.4 | pass every scenario for every version in its `rootContracts`, as a check of the kind `contract` of every Build | New | contract |
+| RCT-4.4 | pass every scenario for every version in its `rootContracts`, as a check of the kind `contract` of every Build | New | contract: `contract-1` in `trunks/trivial/arbol-build.json` of arbol-trunk; all 18 scenarios with R16 after each pass against installed working Build 3 (SYL-180) |
 | RCT-4.5 | divide by the number in `ARBOL_TEST_TIME_SCALE` the waits this specification lists as divided, and stop its work for ever once it has written the first event of its first Driver run, keeping its watch on itself, when `ARBOL_TEST_HANG` is `1` | New | contract: R6 and R7 (SYL-176); unit: `TimeScaledWaits`, `DeliberateHang`, `Watching`, `Loop`, `StoppingTheRun` and `Termination` in `trunks/trivial/tests/` of `arbol-trunk` |
 
 ## Interface

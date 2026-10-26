@@ -61,6 +61,13 @@ All Trunks are kept in one repository, `arbol-trunk`, one folder for each ([RCT-
   shared/specs/                          specifications that several Trunks share
 ```
 
+<!-- sources:
+arbol-trunk:trunks/trivial/scripts/check_build.py#program_policy
+arbol-trunk:trunks/trivial/tests/test_check_build.py#PackageChecks
+arbol-trunk:trunks/trivial/arbol-build.json
+arbol-trunk:trunks/trivial/package.json
+-->
+
 ### Versions: what fits together
 
 The version of this contract is a whole number, and the first one is 1. It rises when a command, an option, a file, a field, a kind of line, a table or a column is removed or changes its meaning. Contract version 1 has no additions; how a table or a column is added within a version, and whether that raises the version, is decided with the first addition ([RCT-3](03-the-chat-tables.md#additions), RCT-D24). Only this contract has version numbers; a Trunk has a code name, and its Builds get their numbers from `arbol-builds` ([RCT-D3](#decisions)).
@@ -84,6 +91,11 @@ For example, First Sapling and a second Root made from it use version 1, and a l
 | 5 | `[2]` | — | fits, and runs |
 
 The later Root could be marked working only once Build 4 or 5 had passed its checks.
+
+<!-- sources:
+arbol-trunk:trunks/trivial/scripts/check_build.py#program_policy
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/root.py
+-->
 
 ### The command `arbol-trunk`
 
@@ -197,9 +209,9 @@ A Trunk:
 
 | ID | A Trunk must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-0.1 | list in the `rootContracts` of its build description every version of this contract it implements, and no other | New | unit |
-| RCT-0.2 | have a code name of one lower-case word of 1 to 32 letters and digits that starts with a letter and is no command word of this contract | New | unit |
-| RCT-0.12 | be kept in the folder `trunks/<code name>/` of the `arbol-trunk` repository as the component `arbol-trunk/<code name>`, and share no code with another Trunk | New | unit |
+| RCT-0.1 | list in the `rootContracts` of its build description every version of this contract it implements, and no other | New | unit: `program_policy` in `trunks/trivial/scripts/check_build.py`, `PackageChecks` in `tests/test_check_build.py`, and the packaged Build check (SYL-180) |
+| RCT-0.2 | have a code name of one lower-case word of 1 to 32 letters and digits that starts with a letter and is no command word of this contract | New | unit: `program_policy` in `trunks/trivial/scripts/check_build.py`, `PackageChecks` in `tests/test_check_build.py`, and the packaged Build check (SYL-180) |
+| RCT-0.12 | be kept in the folder `trunks/<code name>/` of the `arbol-trunk` repository as the component `arbol-trunk/<code name>`, and share no code with another Trunk | New | unit: `program_policy` in `trunks/trivial/scripts/check_build.py`, `PackageChecks` in `tests/test_check_build.py`, and the packaged Build check (SYL-180) |
 | RCT-0.3 | take its Root only from `--root`, refuse a Root identifier that is not one lower-case word of letters and digits with `invalid_input` and a Root without a readable `root.json` with `unknown_root`, and refuse a Root whose `rootContract` is not in its list with `contract_mismatch` | New | contract: R3 (SYL-172); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `TheRoot` (SYL-171), `InvalidInput.test_a_root_identifier_that_is_not_one_lower_case_word_of_letters_and_digits`, `TheRootTheKeychainAndTheFolder.test_a_root_without_a_readable_root_json_is_unknown`, `TheRootTheKeychainAndTheFolder.test_a_root_whose_version_is_not_in_root_contracts_is_a_contract_mismatch` (SYL-172) |
 | RCT-0.4 | take the route, the small-call route, the working folder, the chat, the Exchange and the message from the options and the request file of `run`, an option replacing only its own field of the file, and read the request file once, before it answers | New | contract: R1 (SYL-171), and R5, `--chat` and `--model` beside a request file that names another chat and the route (SYL-173) |
 | RCT-0.5 | let the agent work in the folder named with `--cwd`, or else in the folder it was started from, and refuse a folder that is not absolute or does not exist with `invalid_input` | New | contract: R3, the refusals (SYL-172), and R5, the folder it was started from (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `RequestFile.test_the_working_folder_is_the_cwd_option_else_the_folder_it_was_started_from`, `RequestFile.test_refusals_are_invalid_input` (SYL-171), `InvalidInput.test_a_working_folder_that_is_not_absolute_or_does_not_exist` (SYL-172) |
