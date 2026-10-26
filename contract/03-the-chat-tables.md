@@ -145,7 +145,13 @@ The identifiers of chats and Exchanges are `uuid` and never NULL. Times are `tim
 
 ### Additions
 
-Contract version 1 has no additions: its layout is the whole file below. An addition to the chat tables, such as a new column, would reach every Root of the version, while a Trunk Build that writes it must not be chosen in a Root whose database lacks it; how both are done is decided with the first addition ([RCT-D24](#decisions)). Any other change, such as a column renamed or a check made stricter, needs a new version of this contract and a new Root (ARC-1).
+Contract version 1 has no additions: its layout is the whole file below. The Root manager's `layout` check compares both packaged layout files with an earlier working Build, with `root.layout-edited-statement`, `root.layout-required-column` and `root.layout-new-constraints` rejecting incompatible changes (SYL-184); this does not authorize additions to contract version 1. An addition to the chat tables, such as a new column, would reach every Root of the version, while a Trunk Build that writes it must not be chosen in a Root whose database lacks it; how both are done is decided with the first addition ([RCT-D24](#decisions)). Any other change, such as a column renamed or a check made stricter, needs a new version of this contract and a new Root (ARC-1).
+
+<!-- sources:
+arbol-root:scripts/layout_compatibility.py#check_previous
+arbol-root:scripts/sql_statements.py#preserves
+arbol-root:tests/test_layout_compatibility.py
+-->
 
 ## Requirements
 

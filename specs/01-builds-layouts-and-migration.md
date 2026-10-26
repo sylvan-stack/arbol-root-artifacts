@@ -124,6 +124,12 @@ A later Build of the same Root may only add to this file what the Root's older B
 
 <!-- sources:
 arbol-root:roots/sapling/layout.sql
+arbol-root:scripts/check_layout.py#run_layout
+arbol-root:scripts/sql_statements.py#preserves
+arbol-root:scripts/layout_compatibility.py#check_previous
+arbol-root:scripts/layout_compatibility.py#additions
+arbol-root:tests/test_layout_check.py
+arbol-root:tests/test_layout_compatibility.py
 -->
 
 ### The migration script
@@ -141,11 +147,26 @@ ls /…/migrate-1a2b/      # the folder after a run; arbol-roots removes it
 
 A table that did not change is copied as it is: the binary form keeps every byte of every text and `jsonb` value, and every identifier stays the same. A table that changed is read with a `SELECT` that converts its rows into the new form. The second, trivial Root of the first thin path has none: both Roots use Root Contract version 1, so all five chat tables are copied as they are. Arbol's own tables, such as Drafts, are copied in the same way once Arbol's own specification has them. The whole script for that Root is in the [Interface](#interface).
 
+<!-- sources:
+arbol-root:scripts/check_migration.py#run_migration
+arbol-root:scripts/check_migration.py#invoke
+arbol-root:scripts/migration_protocol.py#protocol
+arbol-root:scripts/migration_fixtures.py#seed
+arbol-root:tests/fixtures/migration-root/migrate.sql
+arbol-root:tests/test_migration_protocol.py
+-->
+
 ### An Exchange that was open
 
 An Exchange that is open in the older database at the snapshot is written into the new one as `interrupted`, ended at the time of the snapshot, with the rows its Trunk had saved by then. Its process and its folder stay in the older Root, where it goes on; the migration starts nothing (ARC-1).
 
 For example, the chat "What build.sh does" has three Exchanges in First Sapling when the second Root is migrated: the first completed, the second failed and was replaced by the third, and the third is open. In the second Root the first two are as they were, and the third is interrupted at the moment First Sapling was read, with the message and the one block of the answer its Trunk had saved. In First Sapling the third goes on, and its Trunk ends it there.
+
+<!-- sources:
+arbol-root:scripts/check_migration.py#judge
+arbol-root:scripts/check_migration.py#normalized
+arbol-root:tests/test_migration_check.py#MigrationCheck
+-->
 
 ### Where a migrated chat came from
 
@@ -158,6 +179,12 @@ d4e5f607  sapling     d4e5f607   1              2026-10-15 11:02:00.000+00
 ```
 
 `ended_through` says how far the original had got: the number of its last Exchange that had ended at the snapshot, 0 when none had. A later check can tell that the original went on in the older Root when it has an ended Exchange with a higher number (ARC-1, RTM-D12).
+
+<!-- sources:
+arbol-root:scripts/check_migration.py#judge
+arbol-root:tests/fixtures/migration-root/layout.sql
+arbol-root:tests/test_migration_check.py#MigrationCheck
+-->
 
 ### The checks of a Build
 
@@ -188,6 +215,21 @@ arbol-root:contract/conformance/README.md
 arbol-root:tests/test_commands.py
 arbol-root:tests/test_layout_copy.py
 arbol-root:tests/test_package.py
+arbol-root:arbol-build.json
+arbol-root:scripts/sql_support.py#BuildInput
+arbol-root:scripts/sql_support.py#private_server
+arbol-root:scripts/sql_support.py#tools
+arbol-root:scripts/check_layout.py#main
+arbol-root:scripts/check_migration.py#main
+arbol-root:scripts/check_migration.py#check_migration
+arbol-root:scripts/verify_sql_build.py#qualify
+arbol-root:tests/test_sql_support.py
+arbol-root:tests/test_layout_check.py
+arbol-root:tests/test_layout_compatibility.py
+arbol-root:tests/test_migration_check.py
+arbol-root:tests/test_migration_protocol.py
+arbol-root:tests/program_support.py#development
+arbol-root:tests/management_support.py#Fixture
 -->
 
 ## Requirements
@@ -198,25 +240,25 @@ An `arbol-root` Build:
 |---|---|---|---|
 | RTM-1.1 | be made for the Root named with `arbol-builds build arbol-root --root <root>`, and carry `layout/chat-tables.sql`, a copy of `contract/<rootContract>/layout.sql` for its Root's version, `layout/root-tables.sql`, a copy of `roots/<root>/layout.sql`, and, exactly when its Root grew from another, `layout/migrate.sql`, a copy of `roots/<root>/migrate.sql` | New | unit: `root.layout-copy`, `root.layout-lineage`, `root.layout-metadata`, `root.package`, `root.package-integrity`; private integration: `root.private-build` (SYL-181) |
 | RTM-1.2 | fail to build when a file it has to carry is missing from the repository | New | unit: `root.layout-missing`, `root.layout-lineage`; private integration: `root.private-build` missing-layout Build (SYL-181) |
-| RTM-1.3 | have the checks `unit`, `layout` and `migration`, and run the last two only on a PostgreSQL server of the check's own in a temporary folder, listening only on a socket, never on the installed server | New | unit delivery part: `root.package`, `root.package-pin`, `root.package-integrity` and `root.private-build`; layout/migration checks remain SYL-184 |
+| RTM-1.3 | have the checks `unit`, `layout` and `migration`, and run the last two only on a PostgreSQL server of the check's own in a temporary folder, listening only on a socket, never on the installed server | New | unit: `root.sql-private-server`, `root.sql-cleanup`, `root.sql-tools`, `root.sql-input`, `root.package-integrity`; private Build integration: `root.private-sql-builds`, with named unit/layout/migration and packaged missing-tool probes (SYL-184) |
 
 The Root's own layout:
 
 | ID | The Root's own layout must… | Origin | Verified by |
 |---|---|---|---|
-| RTM-1.4 | be one file, `roots/<root>/layout.sql`, of statements that can run again, with a comment on every table and column, holding Arbol's own tables and, for a Root that grew from another, `migrated_chats` | New | unit: `layout` |
-| RTM-1.5 | change in a later Build of the same Root only by additions its older Builds can ignore, which are a new table and, on a table that exists, a column that may be NULL or has a default and an index that is not unique, and never by editing a statement that an earlier Build carried | Changed | unit: `layout` |
+| RTM-1.4 | be one file, `roots/<root>/layout.sql`, of statements that can run again, with a comment on every table and column, holding Arbol's own tables and, for a Root that grew from another, `migrated_chats` | New | unit check `layout`: `root.layout-idempotence`, `root.layout-not-repeatable`, `root.layout-comments`, `root.layout-ddl-boundary`; First Sapling carries its empty own layout. Production second-Root files await the owner name/identifier (SYL-184) |
+| RTM-1.5 | change in a later Build of the same Root only by additions its older Builds can ignore, which are a new table and, on a table that exists, a column that may be NULL or has a default and an index that is not unique, and never by editing a statement that an earlier Build carried | Changed | unit check `layout`: `root.layout-compatible-additions`, `root.layout-edited-statement`, `root.layout-required-column`, `root.layout-new-constraints`, `root.layout-baseline`, `root.layout-statements`; packaged prior-Build and planted-fault probes in `root.private-sql-builds` (SYL-184) |
 
 A migration script:
 
 | ID | A migration script must… | Origin | Verified by |
 |---|---|---|---|
-| RTM-1.6 | be one file, `roots/<root>/migrate.sql`, for the one step from the Root its Root grew from, run by `psql` connected to the new database with the variables `from_database` and `from_root`, and write files only in the folder it is run in | New | unit: `migration` |
-| RTM-1.7 | read the older database only in one transaction that is `REPEATABLE READ` and `READ ONLY` | Changed | unit: `migration` |
-| RTM-1.8 | write the new database in one transaction, so that a failure leaves no row there | Changed | unit: `migration`; drill |
-| RTM-1.9 | copy every row of a table that did not change, with the same identifiers and every text and `jsonb` value as it was, except as RTM-1.10 says | Changed | unit: `migration` |
-| RTM-1.10 | write every Exchange that was open at the snapshot as `interrupted`, ended at the time of the snapshot, and start nothing | New | unit: `migration` |
-| RTM-1.11 | write one row of `migrated_chats` for every chat it brings over | New | unit: `migration` |
+| RTM-1.6 | be one file, `roots/<root>/migrate.sql`, for the one step from the Root its Root grew from, run by `psql` connected to the new database with the variables `from_database` and `from_root`, and write files only in the folder it is run in | New | unit check `migration`: `root.migration-protocol`, `root.migration-protocol-refusal`, `root.migration-whole`, `root.migration-origin`; private Build integration `root.private-sql-builds` (SYL-184). Applying the files with arbol-roots remains SYL-185 |
+| RTM-1.7 | read the older database only in one transaction that is `REPEATABLE READ` and `READ ONLY` | Changed | unit check `migration`: `root.migration-protocol`, `root.migration-protocol-refusal`, `root.migration-whole` (validated READ ONLY/REPEATABLE READ source protocol, server-side write refusal and unchanged source rows/schema; SYL-184) |
+| RTM-1.8 | write the new database in one transaction, so that a failure leaves no row there | Changed | unit check `migration`: `root.migration-whole` (one destination transaction, missing-source and missing-table status 3, no target rows), `root.migration-protocol-refusal`; real-Root drill remains SYL-189 |
+| RTM-1.9 | copy every row of a table that did not change, with the same identifiers and every text and `jsonb` value as it was, except as RTM-1.10 says | Changed | unit check `migration`: `root.migration-fixture`, `root.migration-whole`, `root.migration-text-fault` (all five unchanged tables, identifiers, Unicode/CRLF/tab/backslash/trailing spaces and nested JSON; SYL-184) |
+| RTM-1.10 | write every Exchange that was open at the snapshot as `interrupted`, ended at the time of the snapshot, and start nothing | New | unit check `migration`: `root.migration-whole`, `root.migration-open-fault`, `root.migration-snapshot-fault` (matching interruption/snapshot interval, source unchanged; SYL-184). A running original process staying in its Root is a SYL-189 drill |
+| RTM-1.11 | write one row of `migrated_chats` for every chat it brings over | New | unit check `migration`: `root.migration-whole`, `root.migration-provenance-fault` (one row per chat, from_root/from_chat/ended_through and shared snapshot; SYL-184) |
 
 RTM-1.1 and RTM-1.2 are checked by the tests of `scripts/build.py` in the check `unit`, because a build that fails runs no check; `arbol-builds` checks its own `--root` (BLD-0).
 
