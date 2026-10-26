@@ -254,15 +254,6 @@ arbol-root:contract/conformance/rct_conformance/scenarios/r12.py
 ```sh
 arbol-trunk --root sapling trivial -v 4 settle 7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
 
-<!-- sources:
-arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/claim.py#root_lock
-arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/process.py#process_alive
-arbol-trunk:trunks/trivial/tests/test_settle.py#SavingSettlement
-arbol-root:contract/conformance/rct_conformance/scenarios/r13.py
-arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.end
-arbol-root:contract/conformance/rct_conformance/scenarios/r11.py#folder_failure
-arbol-root:contract/conformance/rct_conformance/scenarios/r12.py#through_the_end
--->
 
 # {"exchange":"7f3a2c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b","settled":"interrupted"}
 ```
@@ -278,10 +269,16 @@ arbol-root:contract/conformance/rct_conformance/scenarios/r12.py#through_the_end
 Settling changes no Exchange that has ended, and it can run twice: the second finds no folder. Two settles of one Exchange may also run at the same time, such as the one of `arbol-root stop` and one Arbol runs after a listing: a settle whose folder the other removed first counts it as removed and prints the state the Exchange then has in the database, with the exit status 0. Because RCT-3 fixes how lines become rows, every Trunk Build that implements the Root's version can settle every Exchange of the Root, whichever Trunk ran it ([RCT-D20](#decisions)). Which Build the Root manager starts for it, and when, is in its own specification (ARC-2, ARC-3).
 
 <!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/claim.py#root_lock
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/process.py#process_alive
+arbol-trunk:trunks/trivial/tests/test_settle.py#SavingSettlement
+arbol-root:contract/conformance/rct_conformance/scenarios/r13.py
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.end
+arbol-root:contract/conformance/rct_conformance/scenarios/r11.py#folder_failure
+arbol-root:contract/conformance/rct_conformance/scenarios/r12.py#through_the_end
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/command.py#parse
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/settle.py
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.exchange_state
-arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.end
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/rows.py#RowMaker
 -->
 
@@ -327,6 +324,13 @@ arbol-root:contract/conformance/rct_conformance/scenarios/r14.py
 
 When it does each, how long it waits for the acceptance line and which Build it starts are stated in [RTM-0](../specs/00-the-commands.md).
 
+<!-- sources:
+arbol-root:src/arbol_root/start.py#start
+arbol-root:src/arbol_root/start.py#wait_reply
+arbol-root:src/arbol_root/launcher.py#select_build
+arbol-root:tests/test_start.py#Starting
+-->
+
 ## Requirements
 
 A Trunk:
@@ -357,7 +361,7 @@ The Root manager:
 
 | ID | The Root manager must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-2.14 | start a Trunk only through `arbol-trunk`, naming the Root, the code name, the Build and the Exchange, with `--detach`, detached from the terminal in a process group of its own, and with the folder of the launchers first on the search path | New | unit |
+| RCT-2.14 | start a Trunk only through `arbol-trunk`, naming the Root, the code name, the Build and the Exchange, with `--detach`, detached from the terminal in a process group of its own, and with the folder of the launchers first on the search path | New | unit: `root.start-launch`, `root.start-named`, `root.start-chosen`, `root.start-acceptance`, `root.start-timeout`, `root.start-no-request-read`; private `root.private-build` (SYL-182) |
 | RCT-2.15 | stop an Exchange by a stop line in `control`, count it as ended once its record has `end` or its folder is gone, end processes by force only by signals to the process group of a record whose process lives, and save an Exchange whose process is gone only through `settle` | Changed | drill |
 
 Arbol:

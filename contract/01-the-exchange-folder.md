@@ -66,6 +66,12 @@ A folder named by an Exchange's identifier therefore always holds a whole record
 | The process | `pid` is the Trunk's process identifier, and `startedAt` the time the system gives as that process's start, as the command `ps -o lstart -p <pid>` prints it. A record's process lives when a process with that identifier exists and was started at that time, give or take two seconds, as a Driver tells the owner of a run ([DRV-6](../../arbol/driver-contract/06-state-and-simultaneous-calls.md)). The Trunk leads a process group with the same identifier, which holds the Trunk and the processes it starts itself ([RCT-2](02-starting-stopping-and-settling.md#one-process-group)) |
 | The end | When the Exchange ends, the record gets `end`, the same object as the last line of `events.jsonl` (below) |
 
+<!-- sources:
+arbol-root:src/arbol_root/listing.py#project
+arbol-root:src/arbol_root/process.py#process_alive
+arbol-root:tests/test_listing.py#ProcessIdentity
+-->
+
 ### Signs of life
 
 The record carries the two facts of ARC-3 under `signsOfLife`, rewritten whenever one of them changes ([RCT-D11](#decisions)):
@@ -199,6 +205,13 @@ A reader such as `arbol-root list` or the Arbol backend can tell the state of an
 | A record without `end` | is gone | interrupted | Settling saves what the file holds, as interrupted |
 | No folder | — | ended and saved, or never accepted | The chat tables say which |
 
+<!-- sources:
+arbol-root:src/arbol_root/listing.py#listing
+arbol-root:src/arbol_root/listing.py#read_record
+arbol-root:src/arbol_root/listing.py#project
+arbol-root:tests/test_listing.py#Listing
+-->
+
 ## Requirements
 
 A Trunk:
@@ -225,8 +238,8 @@ Every reader of an Exchange folder:
 
 | ID | A reader must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-1.9 | skip a folder whose name starts with a dot and a last line of `events.jsonl` that does not end with a newline, and ignore every field, line and event type it does not know | New | unit |
-| RCT-1.10 | take a record's process as living only when a process with its `pid` exists and was started at its `startedAt`, give or take two seconds | New | unit |
+| RCT-1.9 | skip a folder whose name starts with a dot and a last line of `events.jsonl` that does not end with a newline, and ignore every field, line and event type it does not know | New | Root manager part: unit `root.list-states`, `root.list-boundary`, `root.list-forward-compatible`, `root.list-form` (SYL-182); it reads no events file. The backend part is specified by accepted BKD-0.15 and remains backend implementation work |
+| RCT-1.10 | take a record's process as living only when a process with its `pid` exists and was started at its `startedAt`, give or take two seconds | New | Root manager part: unit `root.list-process`, `root.list-process-environment`, `root.list-record-validation` (SYL-182). The backend part is specified by accepted BKD-0.15 and remains backend implementation work |
 
 ## Interface
 
