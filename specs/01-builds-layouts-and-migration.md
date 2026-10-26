@@ -130,6 +130,7 @@ arbol-root:scripts/layout_compatibility.py#check_previous
 arbol-root:scripts/layout_compatibility.py#additions
 arbol-root:tests/test_layout_check.py
 arbol-root:tests/test_layout_compatibility.py
+arbol-root:roots/jensen/layout.sql
 -->
 
 ### The migration script
@@ -154,6 +155,7 @@ arbol-root:scripts/migration_protocol.py#protocol
 arbol-root:scripts/migration_fixtures.py#seed
 arbol-root:tests/fixtures/migration-root/migrate.sql
 arbol-root:tests/test_migration_protocol.py
+arbol-root:roots/jensen/migrate.sql
 -->
 
 ### An Exchange that was open
@@ -246,7 +248,7 @@ The Root's own layout:
 
 | ID | The Root's own layout must… | Origin | Verified by |
 |---|---|---|---|
-| RTM-1.4 | be one file, `roots/<root>/layout.sql`, of statements that can run again, with a comment on every table and column, holding Arbol's own tables and, for a Root that grew from another, `migrated_chats` | New | unit check `layout`: `root.layout-idempotence`, `root.layout-not-repeatable`, `root.layout-comments`, `root.layout-ddl-boundary`; First Sapling carries its empty own layout. Production second-Root files await the owner name/identifier (SYL-184) |
+| RTM-1.4 | be one file, `roots/<root>/layout.sql`, of statements that can run again, with a comment on every table and column, holding Arbol's own tables and, for a Root that grew from another, `migrated_chats` | New | unit check `layout`: `root.layout-idempotence`, `root.layout-not-repeatable`, `root.layout-comments`, `root.layout-ddl-boundary`; First Sapling carries its empty own layout. Jensen Root’s exact `roots/jensen/layout.sql` and `migrate.sql` pass the actual private Build path in `root.private-sql-builds --root jensen` (SYL-184) |
 | RTM-1.5 | change in a later Build of the same Root only by additions its older Builds can ignore, which are a new table and, on a table that exists, a column that may be NULL or has a default and an index that is not unique, and never by editing a statement that an earlier Build carried | Changed | unit check `layout`: `root.layout-compatible-additions`, `root.layout-edited-statement`, `root.layout-required-column`, `root.layout-new-constraints`, `root.layout-baseline`, `root.layout-statements`; packaged prior-Build and planted-fault probes in `root.private-sql-builds` (SYL-184) |
 
 A migration script:
