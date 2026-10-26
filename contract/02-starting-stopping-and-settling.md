@@ -129,6 +129,9 @@ arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/driver.py#capability_query
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/driver.py#DriverRun.start
 arbol-trunk:trunks/trivial/tests/test_capabilities.py#Capabilities.test_capability_queries_and_the_run_launcher_stay_in_the_callers_process_group
 arbol-root:contract/conformance/rct_conformance/scenarios/r7.py
+arbol-root:src/arbol_root/groups.py#force_group
+arbol-root:src/arbol_root/groups.py#members
+arbol-root:tests/test_groups.py#NativeForce
 -->
 
 ### Stop
@@ -280,6 +283,10 @@ arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/command.py#parse
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/settle.py
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/database.py#PostgresConnection.exchange_state
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/rows.py#RowMaker
+arbol-root:src/arbol_root/settle.py#settle
+arbol-root:src/arbol_root/settle.py#settle_after_stop
+arbol-root:src/arbol_root/cleanup.py#cleanup
+arbol-root:tests/test_cleanup.py#Cleaning
 -->
 
 ### Sending a message again
@@ -329,6 +336,10 @@ arbol-root:src/arbol_root/start.py#start
 arbol-root:src/arbol_root/start.py#wait_reply
 arbol-root:src/arbol_root/launcher.py#select_build
 arbol-root:tests/test_start.py#Starting
+arbol-root:src/arbol_root/stop.py#stop
+arbol-root:src/arbol_root/settle.py#settle
+arbol-root:src/arbol_root/launcher.py#chosen_build
+arbol-root:tests/test_settle.py#Settling
 -->
 
 ## Requirements
@@ -362,7 +373,7 @@ The Root manager:
 | ID | The Root manager must… | Origin | Verified by |
 |---|---|---|---|
 | RCT-2.14 | start a Trunk only through `arbol-trunk`, naming the Root, the code name, the Build and the Exchange, with `--detach`, detached from the terminal in a process group of its own, and with the folder of the launchers first on the search path | New | unit: `root.start-launch`, `root.start-named`, `root.start-chosen`, `root.start-acceptance`, `root.start-timeout`, `root.start-no-request-read`; private `root.private-build` (SYL-182) |
-| RCT-2.15 | stop an Exchange by a stop line in `control`, count it as ended once its record has `end` or its folder is gone, end processes by force only by signals to the process group of a record whose process lives, and save an Exchange whose process is gone only through `settle` | Changed | drill |
+| RCT-2.15 | stop an Exchange by a stop line in `control`, count it as ended once its record has `end` or its folder is gone, end processes by force only by signals to the process group of a record whose process lives, and save an Exchange whose process is gone only through `settle` | Changed | Root manager unit: `root.stop-control`, `root.stop-dead`, `root.stop-disappearance`, `root.stop-force-term`, `root.stop-force-kill`, `root.stop-orphaned-child`, `root.stop-group-identity`, `root.settle-named`, `root.stop-complete-clock` (SYL-183). Real-Root drill: SYL-188 pending |
 
 Arbol:
 

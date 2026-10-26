@@ -123,6 +123,7 @@ arbol-root:src/arbol_root/start.py#wait_reply
 arbol-root:tests/test_start.py#Starting
 arbol-root:tests/test_start_selection.py#Selection
 arbol-root:tests/standin_trunk.py
+arbol-root:src/arbol_root/launcher.py#chosen_build
 -->
 
 ### The listing
@@ -219,9 +220,28 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Cancel`
 
+<!-- sources:
+arbol-root:src/arbol_root/stop.py#read_exchange
+arbol-root:src/arbol_root/stop.py#append_stop
+arbol-root:src/arbol_root/stop.py#stop
+arbol-root:src/arbol_root/stop.py#force_end
+arbol-root:src/arbol_root/stop.py#save_ended
+arbol-root:src/arbol_root/groups.py#force_group
+arbol-root:src/arbol_root/groups.py#members
+arbol-root:src/arbol_root/groups.py#continuing
+arbol-root:src/arbol_root/process.py#parse_start
+arbol-root:src/arbol_root/clock.py#awake
+arbol-root:tests/test_stop.py#Stopping
+arbol-root:tests/test_groups.py#GroupIdentity
+arbol-root:tests/test_groups.py#NativeForce
+arbol-root:tests/test_management_boundary.py#Boundary
+arbol-root:tests/exchange_process.py
+arbol-root:tests/management_support.py#Fixture
+-->
+
 ### Settling
 
-Implementation choices (RTM-D19): a named settle always delegates that UUID to the chosen compatible Trivial Build, including a missing folder or living record, so the Trunk answers `none` or `alive`. All-settle enumerates real non-dot Exchange directories in lexical order, reuses the record-only process checks and delegates only records whose processes are gone. Unreadable records are retained and reported as per-Exchange `root_unavailable` outcomes. With no eligible/unreadable Exchange, it returns empty results without asking a launcher. Otherwise selection is once for the command, with the same validated inventory/no_fit behavior as start. Each first object reply is retained in results with its extra fields. A successful reply needs a nonempty string settled state, and a present exchange must match the requested UUID; otherwise that outcome is trunk_unavailable. In a refusal, a refusal missing exchange receives that UUID. A failed child or an error makes the settle status 1; `database_unavailable` ends the sequence immediately. A missing program or missing object reply is a per-Exchange `trunk_unavailable` outcome. Top-level selection refusals are passed on, and stop embeds selection/settle refusals in its `settling` outcome.
+Implementation choices (RTM-D19): a named settle always delegates that UUID to the chosen compatible Trivial Build, including a missing folder or living record, so the Trunk answers `none` or `alive`. All-settle enumerates real non-dot Exchange directories in lexical order, reuses the record-only process checks and delegates only records whose processes are gone. Unreadable records are retained and reported as per-Exchange `root_unavailable` outcomes. With no eligible/unreadable Exchange, it returns empty results without asking a launcher. Otherwise selection is once for the command, with the same validated inventory/no_fit behavior as start. Each first object reply is retained in results with its extra fields. A successful reply needs a nonempty string settled state, and a present exchange must match the requested UUID; otherwise that outcome is trunk_unavailable. A refusal missing exchange receives that UUID. A failed child or an error makes the settle status 1; `database_unavailable` ends the sequence immediately. A missing program or missing object reply is a per-Exchange `trunk_unavailable` outcome. Top-level selection refusals are passed on, and stop embeds selection/settle refusals in its `settling` outcome.
 
 Only all-settle cleans dot folders, and only real directories named `.<UUID>.old` or `.<UUID>.new`. Old folders are committed debris and may always go. New folders must be strictly older than 15 seconds by their modification time, with a verified dead process or no record. Damaged/nonregular/symlink records and unknown process identity keep a new folder; unsafe or failed cleanup is diagnosed and makes the command unsuccessful. New/future/exact-boundary folders stay. Directory-relative, symlink-resistant removal never follows a dot-name replacement out of the catalogue. A name already gone is harmless. Cleanup precedes normal settling, even when no Trivial Build fits. It does not read event/request/route/control payloads and is independent of database availability; after a database refusal no further normal Exchange is delegated. No cleanup is done by named settle or stop.
 
@@ -248,6 +268,19 @@ Observed in version 1: when a turn's end could not be recorded, the chat showed 
 Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 
 - `arbol_deprecated_v1:product-spec/12-lessons-and-invariants.md#2. One turn's failure could block everything else`
+
+<!-- sources:
+arbol-root:src/arbol_root/settle.py#settle
+arbol-root:src/arbol_root/settle.py#settle_one
+arbol-root:src/arbol_root/settle.py#settle_after_stop
+arbol-root:src/arbol_root/cleanup.py#cleanup
+arbol-root:src/arbol_root/launcher.py#chosen_build
+arbol-root:src/arbol_root/launcher.py#command_reply
+arbol-root:tests/test_settle.py#Settling
+arbol-root:tests/test_cleanup.py#Cleaning
+arbol-root:tests/test_management_input.py#ManagementInput
+arbol-root:tests/standin_trunk.py
+-->
 
 ### Settings
 
@@ -280,6 +313,9 @@ arbol-root:scripts/verify_build.py#qualify
 arbol-root:tests/test_standin.py#StandIn
 arbol-root:tests/test_start.py
 arbol-root:tests/test_listing.py
+arbol-root:tests/test_management_boundary.py
+arbol-root:tests/test_groups.py
+arbol-root:README.md
 -->
 
 ## Requirements
@@ -288,22 +324,24 @@ The Root manager:
 
 | ID | The Root manager must… | Origin | Verified by |
 |---|---|---|---|
-| RTM-0.1 | take its Root from the `root` of its own Build record, or from `--root` only when it runs outside a Build, refuse with `invalid_input` a Root identifier that is not one lower-case word and with `unknown_root` a Root whose folder holds no `root.json`, and name that Root in every reply of `list`, `stop` and `settle` | New | Root identity and list: unit `root.identity`, `root.build-identity`, `root.input`, `root.list-boundary`, `root.list-states`; stop/settle reply fields remain SYL-183 |
-| RTM-0.2 | end every command, keep no file between two commands, read in an Exchange folder only `record.json`, write there only stop lines in `control`, remove only the folders that `settle` removes, open no request file and no database, and start no program but `arbol-trunk`, and `/bin/ps` in a clean environment and the C locale to read a process's start time | Changed | start/trunks/list boundary: unit `root.no-settings`, `root.start-no-request-read`, `root.start-timeout`, `root.list-boundary`, `root.list-states`, `root.list-unreadable`; stop/settle writes/cleanup remain SYL-183 |
+| RTM-0.1 | take its Root from the `root` of its own Build record, or from `--root` only when it runs outside a Build, refuse with `invalid_input` a Root identifier that is not one lower-case word and with `unknown_root` a Root whose folder holds no `root.json`, and name that Root in every reply of `list`, `stop` and `settle` | New | unit `root.identity`, `root.build-identity`, `root.input`, `root.list-boundary`, `root.list-states`, `root.management-input`, `root.management-boundary`, `root.stop-none`, `root.settle-named` (SYL-181/182/183) |
+| RTM-0.2 | end every command, keep no file between two commands, read in an Exchange folder only `record.json`, write there only stop lines in `control`, remove only the folders that `settle` removes, open no request file and no database, and start no program but `arbol-trunk`, and `/bin/ps` in a clean environment and the C locale to read a process's start time | Changed | unit `root.no-settings`, `root.start-no-request-read`, `root.start-timeout`, `root.list-boundary`, `root.list-unreadable`, `root.management-boundary`, `root.stop-control`, `root.stop-control-refusal`, `root.cleanup-all-only`, `root.cleanup-paths` (SYL-181/182/183) |
 | RTM-0.3 | on `trunks`, print the reply of `arbol-trunk --root <root> [<code name>] list` unchanged | New | unit: `root.trunks`, `root.trunks-refusal`; private integration: `root.private-build` in scripts/verify_build.py (SYL-181) |
 | RTM-0.4 | on `start`, take the Exchange's identifier only from `--exchange`, which the caller has to give, and start the Build named with `-v`, or else the one that `arbol-trunk … list` marks `chosen`, of the Trunk named as the one argument or else `trivial`, as `arbol-trunk --root <root> <code name> -v <build> run --detach --exchange <id> --request <file>` followed unchanged by the caller's `--chat`, `--replaces`, `--cwd`, `--driver`, `--subscription`, `--model` and `--effort`, in its own working folder, and refuse with `no_fit` when no Build is marked `chosen` | New | unit: `root.start-input`, `root.start-named`, `root.start-chosen`, `root.start-no-fit`, `root.start-selection-refusal`, `root.start-launch`; private `root.private-build` (SYL-182) |
 | RTM-0.5 | on `start`, print the Trunk's one line unchanged, with the exit status 0 for an acceptance and 1 for a refusal, remove the request file once it has the line, and refuse with `no_answer`, leaving the file and the process alone, when no line that is a JSON object came within 20 seconds or the output ended without one | New | unit: `root.start-acceptance`, `root.start-refusal`, `root.start-timeout`, `root.start-eof`, `root.start-no-request-read`, `root.start-cleanup` (SYL-182) |
 | RTM-0.6 | on `list`, give every folder of `exchanges/` whose name does not start with a dot, from its record alone, with its Root, Exchange, chat, Trunk, Build, process and whether it lives, its state, its signs of life and its end, name its own build number and package version as `rootBuild` and `rootPackageVersion`, leave out a folder that is gone before its record is read, and name in `unreadable` every folder whose record is there but cannot be read | New | unit: `root.list-states`, `root.list-unreadable`, `root.list-disappearance`, `root.list-process`, `root.list-process-environment`, `root.list-record-validation`, `root.list-catalogue`, `root.list-boundary` (SYL-182) |
 | RTM-0.7 | keep the form of the listing in every Root and every Build, removing no field and changing the meaning of none | New | unit: `root.list-form` against tests/fixtures/listing-v1.json; `root.list-combined`, `root.list-forward-compatible` (SYL-182) |
 | RTM-0.8 | on `list`, start nothing and settle nothing | New | unit: `root.list-boundary`, `root.list-states`, `root.list-unreadable` (SYL-182); no launcher or payload is available to these listings |
-| RTM-0.9 | on `stop`, append one stop line only for a record whose process lives, read the record every 100 milliseconds until it has `end`, the folder is gone or its process is gone, have the Exchange settled at once when its process is gone without an `end`, and end the Exchange by force when it has not ended after 20 seconds | Changed | unit, drill |
-| RTM-0.10 | end an Exchange by force with SIGTERM to the process group of a record whose process lives, SIGKILL 5 seconds later to whatever of the group still lives, refuse with `not_ended` when something of it lives 5 seconds after that, and otherwise have the Exchange settled | Changed | unit, drill |
-| RTM-0.11 | treat the stop of an Exchange without a folder as success, with `"ended": "none"`, and have an Exchange whose process is gone settled at once, without a stop line | Kept | unit |
-| RTM-0.12 | count the 20 seconds and the 5 seconds of a stop with `CLOCK_UPTIME_RAW` | New | unit |
-| RTM-0.13 | on `settle`, settle every Exchange whose record's process is gone, or only the one named, one after another, each through `arbol-trunk --root <root> trivial -v <build> settle <exchange>` with the Build that `arbol-trunk --root <root> trivial list` marks `chosen`, refuse with `no_fit` when none is marked, try no further Exchange after a refusal with `database_unavailable`, and, when no Exchange is named, remove every folder `.<exchange>.old` and every folder `.<exchange>.new` more than 15 seconds old whose record's process is gone or that has no record | New | unit |
+| RTM-0.9 | on `stop`, append one stop line only for a record whose process lives, read the record every 100 milliseconds until it has `end`, the folder is gone or its process is gone, have the Exchange settled at once when its process is gone without an `end`, and end the Exchange by force when it has not ended after 20 seconds | Changed | unit: `root.stop-control`, `root.stop-dead`, `root.stop-disappearance`, `root.stop-publication`, `root.stop-grace-clock`, `root.stop-complete-clock`; real-Root drill: SYL-188 pending |
+| RTM-0.10 | end an Exchange by force with SIGTERM to the process group of a record whose process lives, SIGKILL 5 seconds later to whatever of the group still lives, refuse with `not_ended` when something of it lives 5 seconds after that, and otherwise have the Exchange settled | Changed | unit: `root.stop-force-term`, `root.stop-force-kill`, `root.stop-orphaned-child`, `root.stop-group-identity`, `root.stop-group-refusal`, `root.stop-record-refusal`, `root.stop-complete-clock` (not_ended); real-Root drill: SYL-188 pending |
+| RTM-0.11 | treat the stop of an Exchange without a folder as success, with `"ended": "none"`, and have an Exchange whose process is gone settled at once, without a stop line | Kept | unit: `root.stop-none`, `root.stop-ended`, `root.stop-dead`, `root.stop-settle-refusal`, `root.stop-process-identity`, `root.stop-disappearance` (SYL-183) |
+| RTM-0.12 | count the 20 seconds and the 5 seconds of a stop with `CLOCK_UPTIME_RAW` | New | unit: `root.stop-awake-clock`, `root.stop-grace-clock`, `root.stop-escalation-clock`, `root.stop-complete-clock` with in-process moved clocks (SYL-183) |
+| RTM-0.13 | on `settle`, settle every Exchange whose record's process is gone, or only the one named, one after another, each through `arbol-trunk --root <root> trivial -v <build> settle <exchange>` with the Build that `arbol-trunk --root <root> trivial list` marks `chosen`, refuse with `no_fit` when none is marked, try no further Exchange after a refusal with `database_unavailable`, and, when no Exchange is named, remove every folder `.<exchange>.old` and every folder `.<exchange>.new` more than 15 seconds old whose record's process is gone or that has no record | New | unit: `root.settle-named`, `root.settle-all`, `root.settle-empty`, `root.settle-database-refusal`, `root.settle-selection`, `root.settle-unavailable`, `root.settle-unreadable`, `root.settle-reply-identity`, `root.settle-child-status`; dot cleanup: `root.cleanup-old`, `root.cleanup-new-age`, `root.cleanup-unreadable`, `root.cleanup-paths`, `root.cleanup-all-only`, `root.cleanup-failure`, `root.cleanup-disappearance` (SYL-183) |
 | RTM-0.14 | read no settings file | New | unit: `root.no-settings` (SYL-181) |
 | RTM-0.15 | take the Root's folder from `--root-dir` and the folder of the launchers from `--bin-dir` when they are given, start `arbol-trunk` from that folder with the folder first on the search path, and refuse `--root-dir` without `--bin-dir` | New | unit: `root.identity`, `root.trunks`, `root.input` (SYL-181) |
-| RTM-0.16 | refuse with `trunk_unavailable` when `arbol-trunk` cannot be started, or its `list` or `settle` ends without a line that is a JSON object | New | list/start failure: unit `root.trunk-unavailable`, `root.start-cleanup`, Selection.test_malformed_or_wrong_inventory_is_unavailable; settle remains SYL-183 |
+| RTM-0.16 | refuse with `trunk_unavailable` when `arbol-trunk` cannot be started, or its `list` or `settle` ends without a line that is a JSON object | New | unit: `root.trunk-unavailable`, `root.start-cleanup`, Selection.test_malformed_or_wrong_inventory_is_unavailable, `root.settle-unavailable`, `root.settle-selection`, `root.settle-reply-identity` (SYL-181/182/183) |
+
+SYL-183 supplies the stop/settle implementation and unit checks. The real-Root drills of RTM-0.9 and RTM-0.10 remain SYL-188; this specification stays accepted until every named check, those drills included, has passed.
 
 RTM-0.7 is checked against a listing kept in the repository, to which a later Build may only add fields. RTM-0.10's `not_ended` and RTM-0.12's clock are checked inside the program's own process, because no stand-in outlives SIGKILL or makes the Mac sleep.
 

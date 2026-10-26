@@ -191,6 +191,14 @@ A stop and the Leather Bag's answers reach the Trunk as lines of the Driver's ow
 
 What a stop leads to is in [RCT-2](02-starting-stopping-and-settling.md#stop).
 
+<!-- sources:
+arbol-root:src/arbol_root/stop.py#append_stop
+arbol-root:src/arbol_root/stop.py#pending
+arbol-root:src/arbol_root/stop.py#stop
+arbol-root:tests/test_stop.py#Stopping
+arbol-root:tests/test_management_boundary.py#Boundary
+-->
+
 ### What a folder tells a reader
 
 A reader such as `arbol-root list` or the Arbol backend can tell the state of an Exchange from its folder and its record alone:
@@ -232,7 +240,7 @@ The Root manager and the Arbol backend, as writers of `control`:
 
 | ID | A writer of `control` must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-1.8 | append only whole lines of the Driver's control input, of at most 64 KiB, each with one write on a file opened for appending, never create the file, and wait up to 15 seconds while only `.<exchange>.new` exists | New | unit |
+| RCT-1.8 | append only whole lines of the Driver's control input, of at most 64 KiB, each with one write on a file opened for appending, never create the file, and wait up to 15 seconds while only `.<exchange>.new` exists | New | Root manager: unit `root.stop-control`, `root.stop-control-refusal`, `root.stop-short-write`, `root.stop-publication`, `root.management-boundary` (SYL-183). The backend answer-writer part is specified by accepted BKD-0.17 and remains backend implementation work |
 
 Every reader of an Exchange folder:
 
