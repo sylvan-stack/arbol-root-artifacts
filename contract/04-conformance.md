@@ -48,6 +48,14 @@ It ends with the exit status 0 when every scenario passed, 1 when one failed, an
 | Shorter waits | `ARBOL_TEST_TIME_SCALE=<n>` in the environment, 10 unless a scenario says otherwise. The Trunk and the stand-in divide by it the waits of this contract that do not depend on how fast a program starts or a connection is made: the 10 seconds of the heartbeat, the 5 seconds of a wait in the work loop other than a database call, the 60 seconds and the one-second look of the Trunk's watch on itself, the 5 seconds between SIGTERM and SIGKILL, the second of `control`, the 5 and 60 seconds of the database tries while working, before a run and at the end, the 18 seconds of a stop, the minute added to the idle limit, and the Driver's own waits, the idle limit among them (DRV-5), and the waits a Trunk's own specification sets inside them, such as the time it gives its Driver to end after a stop. They do not divide the 15 seconds of the answer to a start, the 10 seconds of the acceptance's work with the database, the 5 seconds of one database call and the 2 seconds of the Keychain, because starting a program and a first connection take as long in a test as anywhere; nor limits a request names, nor the size limits of `events.jsonl` |
 | A Trunk that hangs on purpose | `ARBOL_TEST_HANG=1` in the environment: the Trunk's work stops for ever once it has written the first event of its first Driver run to `events.jsonl`, and its watch on itself goes on ([RCT-1](01-the-exchange-folder.md#the-trunk-watches-itself)) |
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/clock.py#scaled
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/run.py#drive
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/watch.py#Watch
+arbol-trunk:trunks/trivial/tests/test_time_scale.py#TimeScaledWaits
+arbol-trunk:trunks/trivial/tests/test_watch.py#DeliberateHang
+-->
+
 ### The stand-in Driver
 
 One program for every Trunk, part of the suite: `contract/conformance/standin/driver.py` ([RCT-D26](#decisions)). It takes a Driver's command line (DRV-2): an optional `-v <build>` first, `run` with `--request <file>`, `--control` and the other options, `runs stop <run>`, and `info`, which names contract 1. It plays the script of the scenario named in `<home>/standin/scenario`, writes events as a Driver does, stops a run as a Driver does, and appends to `<home>/standin/received.jsonl` one record for each start, when that start ends: the launcher name it was started by, its arguments, the request file as it read it, every line of its control input, every line it wrote on its standard output, and every signal it got ([RCT-D33](#decisions)). Where a scenario says so, it holds a run open after its `started` event until the suite writes `<home>/standin/release` ([RCT-D34](#decisions)), and it starts a child in a process group of its own, as a Driver starts its vendor tool, and ends that child when it gets SIGTERM, as a Driver ends the tool on a stop. A run with `"tools": "none"` and no chat session, such as a title, gets one `text` event, "Stand-in title", and completes, unless the scenario makes it fail.
@@ -81,6 +89,8 @@ arbol-root:contract/conformance/rct_conformance/scenarios/r4.py
 arbol-root:contract/conformance/rct_conformance/scenarios/r13.py
 arbol-root:contract/conformance/rct_conformance/scenarios/r14.py
 arbol-root:contract/conformance/rct_conformance/registry.py
+arbol-root:contract/conformance/rct_conformance/scenarios/r6.py
+arbol-root:contract/conformance/rct_conformance/scenarios/r7.py
 -->
 
 ### How a Trunk Build's check runs it
@@ -115,7 +125,7 @@ A Trunk:
 | ID | A Trunk must… | Origin | Verified by |
 |---|---|---|---|
 | RCT-4.4 | pass every scenario for every version in its `rootContracts`, as a check of the kind `contract` of every Build | New | contract |
-| RCT-4.5 | divide by the number in `ARBOL_TEST_TIME_SCALE` the waits this specification lists as divided, and stop its work for ever once it has written the first event of its first Driver run, keeping its watch on itself, when `ARBOL_TEST_HANG` is `1` | New | contract |
+| RCT-4.5 | divide by the number in `ARBOL_TEST_TIME_SCALE` the waits this specification lists as divided, and stop its work for ever once it has written the first event of its first Driver run, keeping its watch on itself, when `ARBOL_TEST_HANG` is `1` | New | contract: R6 and R7 (SYL-176); unit: `TimeScaledWaits`, `DeliberateHang`, `Watching`, `Loop`, `StoppingTheRun` and `Termination` in `trunks/trivial/tests/` of `arbol-trunk` |
 
 ## Interface
 

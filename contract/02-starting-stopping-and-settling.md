@@ -125,6 +125,10 @@ For example, the agent runs `make` when the group is ended: the Driver gets SIGT
 <!-- sources:
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/detach.py#lead_process_group
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/termination.py#end_group
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/driver.py#capability_query
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/driver.py#DriverRun.start
+arbol-trunk:trunks/trivial/tests/test_capabilities.py#Capabilities.test_capability_queries_and_the_run_launcher_stay_in_the_callers_process_group
+arbol-root:contract/conformance/rct_conformance/scenarios/r7.py
 -->
 
 ### Stop
@@ -306,7 +310,7 @@ A Trunk:
 | RCT-2.4 | with `--detach`, point its standard input, output and error at `/dev/null` after the acceptance line, ignore SIGHUP, and finish the Exchange without its starter, Arbol, the Root manager or the database | Changed | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Background` (SYL-171); drill: SYL-187 |
 | RCT-2.5 | without `--detach`, write every line it appends to `events.jsonl` on standard output too, and end with the exit status 0 for completed, 1 for failed and 2 for cancelled | New | contract: R2 (SYL-174); also the Trivial Trunk’s unit `WholeExchange.test_foreground_exit_status_follows_the_exchange_end` |
 | RCT-2.19 | let standard output never hold up, change or end the Exchange: leave out a line it cannot take at once, and write nothing more there after a write has failed | New | contract: R2 (SYL-174) and R4 (SYL-175), including a starter that closes its pipe before acceptance; unit: `ForegroundOutput` in `trunks/trivial/tests/test_output.py` of `arbol-trunk` |
-| RCT-2.6 | lead a process group of its own and keep in it every process it starts itself for the Exchange | New | contract |
+| RCT-2.6 | lead a process group of its own and keep in it every process it starts itself for the Exchange | New | contract: R7 (SYL-176); unit: `Capabilities.test_capability_queries_and_the_run_launcher_stay_in_the_callers_process_group`, `Background` and `Termination` in `trunks/trivial/tests/` of `arbol-trunk` |
 | RCT-2.7 | on a stop line, hand the stop to its run and stop a small call that runs, start no run that had not started, and write its end to its folder within 18 seconds of the line, `cancelled` unless the run had ended otherwise before the stop reached it | Changed | contract: R8 (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `StoppingTheRun`, `WholeExchange.test_after_a_stop_line_before_the_run_no_run_starts_and_the_exchange_is_cancelled`, `WholeExchange.test_a_stop_line_while_a_tool_call_runs_cancels_the_exchange_and_saves_the_call_as_interrupted` (SYL-173); the Trivial Trunk makes no small call (TRV-0.8) |
 | RCT-2.8 | on SIGTERM, on SIGINT, and in the foreground on SIGHUP, end its process group with SIGTERM and 5 seconds later SIGKILL, and write no end | New | contract: R2 and R10 (SYL-174); also the Trivial Trunk’s unit `Termination` and `Background` |
 | RCT-2.9 | end every accepted Exchange exactly once, on every path, with no other component accepting or confirming the end | Changed | contract: R1 (SYL-171); R11 comes with SYL-177; drill: SYL-187 |

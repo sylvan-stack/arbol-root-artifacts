@@ -86,6 +86,14 @@ The record carries the two facts of ARC-3 under `signsOfLife`, rewritten wheneve
 
 When several are true, the Trunk gives the first of them in the order of this table. Its own steps count as the wait they serve: starting a run as `driver`, saving rows and ending as `database`. Every wait in the Trunk's work has a time limit of at most 5 seconds, after which the loop comes round and raises the heartbeat (ARC-3).
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/life.py#SignsOfLife
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/life.py#waiting_for
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/run.py#drive
+arbol-trunk:trunks/trivial/tests/test_life.py
+arbol-root:contract/conformance/rct_conformance/scenarios/r6.py
+-->
+
 ### The Trunk watches itself
 
 A part of the Trunk's process that does nothing else, such as a thread of its own, looks at the heartbeat every second. When the work has not raised it for 60 seconds, that part ends the Trunk's process group as [RCT-2](02-starting-stopping-and-settling.md#one-process-group) says: SIGTERM first, so that each Driver in the group stops its run and ends the vendor tool and the agent's commands, and SIGKILL 5 seconds later to whatever is still alive. It writes nothing. The Exchange is then one whose process is gone, and settling saves it as interrupted ([RCT-2](02-starting-stopping-and-settling.md#settling)). This works while Arbol is not running ([ARC-3](../../arbol/architecture/03-stuck-trunks.md)).
@@ -93,6 +101,14 @@ A part of the Trunk's process that does nothing else, such as a thread of its ow
 For example, a defect makes the Trunk's work wait for ever on a lock while the agent runs `make`: 60 seconds after the last heartbeat the Driver gets SIGTERM, ends `claude` and the `make`, and exits; the Trunk is gone 5 seconds later, and `arbol-root list` shows the Exchange as interrupted.
 
 The 60 seconds are counted with the clock that macOS calls `CLOCK_UPTIME_RAW`, which stands still while the Mac sleeps, so waking the Mac makes no Exchange look hung.
+
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/watch.py#Watch
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/run.py#run_exchange
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/termination.py#end_group
+arbol-trunk:trunks/trivial/tests/test_watch.py
+arbol-root:contract/conformance/rct_conformance/scenarios/r7.py
+-->
 
 ### The answer as it arrives: `events.jsonl`
 
@@ -184,8 +200,8 @@ A Trunk:
 |---|---|---|---|
 | RCT-1.1 | keep one folder for each Exchange at `exchanges/<exchange>/` in its Root's folder, with the mode 0700 and files of the mode 0600, make it under the name `.<exchange>.new` and rename it into place only when `record.json`, `events.jsonl` and `control` are in it, and remove it by renaming it to `.<exchange>.old` before deleting it | New | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Folder` (SYL-171) |
 | RCT-1.2 | write `record.json` in the form of `ExchangeRecord`, replace it only by renaming a whole file over it, and never change `root`, `exchange`, `chat`, `trunk`, `build`, `process`, `route`, `smallCallRoute` or `workingFolder` after the first record | New | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Folder.test_the_record_is_replaced_whole_and_who_runs_it_never_changes` (SYL-171) |
-| RCT-1.3 | raise `signsOfLife.heartbeat` from the loop that does its work at least every 10 seconds and rewrite the record each time, keep `waitingFor` and `since` true, giving the first that holds of `answer`, `tool`, `driver`, `small-call` and `database`, and give no wait in that loop more than 5 seconds | New | contract |
-| RCT-1.4 | end its process group, with SIGTERM and 5 seconds later SIGKILL, and write nothing, when its work has not raised the heartbeat for 60 seconds, counted with `CLOCK_UPTIME_RAW` by a part of its process that does nothing else | New | contract, drill |
+| RCT-1.3 | raise `signsOfLife.heartbeat` from the loop that does its work at least every 10 seconds and rewrite the record each time, keep `waitingFor` and `since` true, giving the first that holds of `answer`, `tool`, `driver`, `small-call` and `database`, and give no wait in that loop more than 5 seconds | New | contract: R6 (SYL-176); unit: `Heartbeat`, `Waiting`, `RoundsWithLife` and `TimeScaledWaits` in `trunks/trivial/tests/` of `arbol-trunk` |
+| RCT-1.4 | end its process group, with SIGTERM and 5 seconds later SIGKILL, and write nothing, when its work has not raised the heartbeat for 60 seconds, counted with `CLOCK_UPTIME_RAW` by a part of its process that does nothing else | New | contract: R7 (SYL-176); unit: `Watching`, `EndingTheGroup`, `WatchLifetime`, `DeliberateHang` and `Termination` in `trunks/trivial/tests/` of `arbol-trunk`; drill remains SYL-187 |
 | RCT-1.5 | append every event of the agent's Driver runs to `events.jsonl` exactly as the Driver wrote it, except as RCT-1.6 and RCT-1.12 say, in a line `{"n", "event"}` with `n` counting from 1 without gaps, each line whole with one write, before it saves anything that comes from it, and the end as the last line | New | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Events` (SYL-171) |
 | RCT-1.11 | append each `answer` line it hands to a run as `{"n", "answer"}`, and the `finished` event of each small call's run as `{"n", "smallRun"}`, and nothing else of a small call | New | contract: R19 for the small calls (SYL-171), R9 for the answers (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Answers` (SYL-173) |
 | RCT-1.6 | when the next line would take `events.jsonl` past 256 MiB, stop its run, end the Exchange as failed with `events_file_full`, and from then on write only closing lines whose start is in the file, `usage`, `finished`, `smallRun` and the end | New | contract |
