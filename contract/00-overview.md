@@ -95,6 +95,9 @@ The later Root could be marked working only once Build 4 or 5 had passed its che
 <!-- sources:
 arbol-trunk:trunks/trivial/scripts/check_build.py#program_policy
 arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/root.py
+arbol:src/arbol_builds/service.py#prune_protections
+arbol:src/arbol_builds/pruning.py#retained_roots
+arbol:tests/test_builds.py#PruningRoots
 -->
 
 ### The command `arbol-trunk`
