@@ -159,6 +159,13 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Survival and recovery`
 - `arbol_deprecated_v1:product-spec/12-lessons-and-invariants.md#3. Durable bookkeeping on the streaming path`
 
+<!-- sources:
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/events.py#EventsFile
+arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/run.py#drive
+arbol-trunk:trunks/trivial/tests/test_events.py#Events
+arbol-root:contract/conformance/rct_conformance/scenarios/r15.py
+-->
+
 ### Stop and answers: `control`
 
 A stop and the Leather Bag's answers reach the Trunk as lines of the Driver's own *control input*: the standard input that a Driver run keeps open for stop and answers (DRV-2, DRV-3). They are one JSON object per line ([RCT-D13](#decisions)):
@@ -204,8 +211,8 @@ A Trunk:
 | RCT-1.4 | end its process group, with SIGTERM and 5 seconds later SIGKILL, and write nothing, when its work has not raised the heartbeat for 60 seconds, counted with `CLOCK_UPTIME_RAW` by a part of its process that does nothing else | New | contract: R7 (SYL-176); unit: `Watching`, `EndingTheGroup`, `WatchLifetime`, `DeliberateHang` and `Termination` in `trunks/trivial/tests/` of `arbol-trunk`; drill remains SYL-187 |
 | RCT-1.5 | append every event of the agent's Driver runs to `events.jsonl` exactly as the Driver wrote it, except as RCT-1.6 and RCT-1.12 say, in a line `{"n", "event"}` with `n` counting from 1 without gaps, each line whole with one write, before it saves anything that comes from it, and the end as the last line | New | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Events` (SYL-171) |
 | RCT-1.11 | append each `answer` line it hands to a run as `{"n", "answer"}`, and the `finished` event of each small call's run as `{"n", "smallRun"}`, and nothing else of a small call | New | contract: R19 for the small calls (SYL-171), R9 for the answers (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Answers` (SYL-173) |
-| RCT-1.6 | when the next line would take `events.jsonl` past 256 MiB, stop its run, end the Exchange as failed with `events_file_full`, and from then on write only closing lines whose start is in the file, `usage`, `finished`, `smallRun` and the end | New | contract |
-| RCT-1.12 | write no further `tool_output_delta` line for a tool call once that call's `tool_output_delta` lines in `events.jsonl` have passed 1 MiB, and go on writing every other line | New | contract |
+| RCT-1.6 | when the next line would take `events.jsonl` past 256 MiB, stop its run, end the Exchange as failed with `events_file_full`, and from then on write only closing lines whose start is in the file, `usage`, `finished`, `smallRun` and the end | New | contract: R15.whole_file (SYL-178), at the real 256 MiB cap; unit: `Events.test_a_full_file_keeps_only_closures_of_written_starts_usage_finished_and_the_end`, `StoppingTheRun.test_a_full_file_sends_the_same_stop_and_kills_a_driver_that_does_not_end`, and `WholeExchange.test_a_full_file_fails_the_exchange_and_keeps_only_rows_from_written_lines`, in `trunks/trivial/tests/` of `arbol-trunk` |
+| RCT-1.12 | write no further `tool_output_delta` line for a tool call once that call's `tool_output_delta` lines in `events.jsonl` have passed 1 MiB, and go on writing every other line | New | contract: R15.tool_output (SYL-178), two MiB streamed with about one MiB kept; unit: `Events.test_tool_output_stops_after_one_mib_but_other_lines_and_calls_go_on_without_n_gaps` and `Events.test_tool_output_counts_utf8_envelope_and_newline_bytes` in `trunks/trivial/tests/test_events.py` of `arbol-trunk` |
 | RCT-1.7 | make `control` empty with the folder, never write to it, read the new lines at least once a second and before it starts each run, and hand each `stop` and `answer` line unchanged to the control input of the run it concerns | Changed | contract: R8 and R9 (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Folder` (SYL-171), `Control`, `HandingOn`, `WholeExchange.test_after_a_stop_line_before_the_run_no_run_starts_and_the_exchange_is_cancelled` (SYL-173) |
 
 The Root manager and the Arbol backend, as writers of `control`:
