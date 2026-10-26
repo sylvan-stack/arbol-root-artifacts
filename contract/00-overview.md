@@ -98,6 +98,10 @@ arbol-trunk:trunks/trivial/src/arbol_trunk_trivial/root.py
 arbol:src/arbol_builds/service.py#prune_protections
 arbol:src/arbol_builds/pruning.py#retained_roots
 arbol:tests/test_builds.py#PruningRoots
+arbol:src/arbol_roots/operations.py#create
+arbol:src/arbol_roots/operations.py#ready
+arbol:tests/test_roots.py#Commands
+arbol:tests/test_roots.py#real_server_example
 -->
 
 ### The command `arbol-trunk`
@@ -236,8 +240,8 @@ The launcher `arbol-trunk`:
 
 | ID | `arbol-roots` must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-0.11 | write into a new Root's `root.json`, as `rootContract`, the version named with `--root-contract`, by default the version of the Root named with `--from` and else 1, and never change it afterwards | New | unit |
-| RCT-0.13 | mark a Root `working` only while a working Build of `trivial` lists the Root's `rootContract` | New | unit |
+| RCT-0.11 | write into a new Root's `root.json`, as `rootContract`, the version named with `--root-contract`, by default the version of the Root named with `--from` and else 1, and never change it afterwards | New | unit: `roots.create`, `roots.create-from`, `roots.create-refusal`, `roots.states`; real-server `real_server_example` in `arbol:tests/test_roots.py` (SYL-160) |
+| RCT-0.13 | mark a Root `working` only while a working Build of `trivial` lists the Root's `rootContract` | New | unit: `roots.ready`, `roots.states`; real-server acceptance with private Build records (SYL-160) |
 
 ## Interface
 
