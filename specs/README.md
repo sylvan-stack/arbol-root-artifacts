@@ -36,7 +36,7 @@ Where the Arbol backend or a window carries a part, the row names the requiremen
 | ARC-1.25 | RTM-0.6, RTM-0.7 give a listing that can be combined; asking every Root and reporting a failing one: BKD-0.22 |
 | ARC-1.26 | RTM-0.1; RCT-1.2; restarts of the backend: BKD-0.21, BKD-0.22; of the App: SYL-192 |
 | ARC-1.27 | RTM-1.7, RTM-1.10 |
-| ARC-1.28 | RTM-1.1, RTM-1.4, RTM-1.5; RCT-3.1, RCT-3.6; running the files: `arbol-roots` (RTM-1); the backend creates or changes no table: BKD-0.6 |
+| ARC-1.28 | RTM-1.1, RTM-1.4, RTM-1.5; RCT-3.1, RCT-3.6; running the files: ARC-1 and RTM-1, “How arbol-roots runs the files” (`arbol-roots`); the backend creates or changes no table: BKD-0.6 |
 | ARC-1.29 | RTM-1.1, RTM-1.6; RTM-0.2 (the program runs none of them) |
 | ARC-2.7 | RTM-0.6, RTM-0.13; RCT-2.12; showing the Exchange: BKD-0.18, BKD-2.16 |
 | ARC-2.12 | RTM-1.10, for the migration: it starts nothing and leaves the original Exchange with its Root; RCT-1.2, RCT-3.4 for the rest |
