@@ -95,6 +95,8 @@ arbol-root:scripts/python-distribution.json
 arbol-root:.python-version
 arbol-root:tests/test_layout_copy.py
 arbol-root:tests/test_package.py
+arbol-root:tests/test_sapling_drills.py#Frame.test_json_commands_preserve_arguments_and_reject_bad_status_or_non_json
+arbol-root:scripts/verify_build.py#qualify
 -->
 
 ### How `arbol-roots` runs the files
@@ -261,7 +263,7 @@ An `arbol-root` Build:
 |---|---|---|---|
 | RTM-1.1 | be made for the Root named with `arbol-builds build arbol-root --root <root>`, and carry `layout/chat-tables.sql`, a copy of `contract/<rootContract>/layout.sql` for its Root's version, `layout/root-tables.sql`, a copy of `roots/<root>/layout.sql`, and, exactly when its Root grew from another, `layout/migrate.sql`, a copy of `roots/<root>/migrate.sql` | New | unit: `root.layout-copy`, `root.layout-lineage`, `root.layout-metadata`, `root.package`, `root.package-integrity`; private integration: `root.private-build` (SYL-181) |
 | RTM-1.2 | fail to build when a file it has to carry is missing from the repository | New | unit: `root.layout-missing`, `root.layout-lineage`; private integration: `root.private-build` missing-layout Build (SYL-181) |
-| RTM-1.3 | have the checks `unit`, `layout` and `migration`, and run the last two only on a PostgreSQL server of the check's own in a temporary folder, listening only on a socket, never on the installed server | New | unit: `root.sql-private-server`, `root.sql-cleanup`, `root.sql-tools`, `root.sql-input`, `root.package-integrity`; private Build integration: `root.private-sql-builds`, with named unit/layout/migration and packaged missing-tool probes (SYL-184) |
+| RTM-1.3 | have the checks `unit`, `layout` and `migration`, and run the last two only on a PostgreSQL server of the check's own in a temporary folder, listening only on a socket, never on the installed server | New | unit: `root.sql-private-server`, `root.sql-cleanup`, `root.sql-tools`, `root.sql-input`, `root.package-integrity`; private Build integration: `root.private-sql-builds`, with named unit/layout/migration and packaged missing-tool probes (SYL-184); packaged-interpreter fixture regression `sapling.commands` (spaces/quote alias, literal arguments, direct and clean-login refusals) and actual `root.private-build` with 154 Root / 52 contract tests under packaged CPython, plus intentional missing-layout failure (SYL-293) |
 
 The Root's own layout:
 
