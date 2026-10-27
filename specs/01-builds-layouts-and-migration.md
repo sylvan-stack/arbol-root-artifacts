@@ -242,6 +242,35 @@ The packaged migration check qualifies all advertised modes on its own server, w
 
 The PostgreSQL 17 [psql rules](https://www.postgresql.org/docs/17/app-psql.html), [row locks](https://www.postgresql.org/docs/17/explicit-locking.html) and [UUID function](https://www.postgresql.org/docs/17/functions-uuid.html) define the used mechanics.
 
+<!-- sources:
+arbol-root:roots/jensen/migration-modes.json
+arbol-root:roots/jensen/layout.sql
+arbol-root:roots/jensen/migrate.sql
+arbol-root:scripts/migration_modes.py#read_modes
+arbol-root:scripts/migration_modes.py#branch
+arbol-root:scripts/migration_protocol.py#mode_protocol
+arbol-root:scripts/sql_support.py#BuildInput
+arbol-root:scripts/chat_migration_check.py#check_modes
+arbol-root:scripts/chat_migration_check.py#copied
+arbol-root:scripts/check_migration.py#check_migration
+arbol-root:scripts/verify_sql_build.py#qualify
+arbol-root:tests/test_layout_copy.py#LayoutCopy.test_optional_modes_copy_exactly_and_bad_or_lineageless_capabilities_write_nothing
+arbol-root:tests/test_chat_migration.py#Capabilities
+arbol-root:tests/test_chat_migration.py#ChatModes
+arbol-root:roots/sapling/drills/chat_reimport_drills.py#upgrade
+arbol-root:roots/sapling/drills/chat_reimport_drills.py#replace
+arbol-root:roots/sapling/drills/chat_reimport_drills.py#diverged
+arbol-root:roots/sapling/drills/chat_reimport_drills.py#copied
+arbol-root:roots/sapling/drills/chat_reimport_drills.py#run
+arbol-root:tests/test_migration_drills.py#ReimportJudgment
+arbol:src/arbol_roots/cli.py#main
+arbol:src/arbol_roots/sql.py#selected_sql
+arbol:src/arbol_roots/sql.py#migrate
+arbol:src/arbol_roots/sql.py#mode_result
+arbol:src/arbol_roots/database.py#Database
+arbol:tests/test_roots_sql.py#InUseModes
+-->
+
 ### The checks of a Build
 
 `arbol-build.json` names three checks. Each starts the Build's own program or runs the Build's own files, not through a launcher (BLD-0); `layout` also runs the files of an earlier Build of the same Root:
