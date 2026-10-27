@@ -1,7 +1,7 @@
 ---
 role: authored
 spec: RCT-0
-status: accepted
+status: implemented
 ---
 # Root Contract · 00 Overview
 
@@ -250,8 +250,15 @@ The launcher `arbol-trunk`:
 
 | ID | `arbol-roots` must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-0.11 | write into a new Root's `root.json`, as `rootContract`, the version named with `--root-contract`, by default the version of the Root named with `--from` and else 1, and never change it afterwards | New | unit: `roots.create`, `roots.create-from`, `roots.create-refusal`, `roots.states`; real-server `real_server_example` in `arbol:tests/test_roots.py` (SYL-160) |
-| RCT-0.13 | mark a Root `working` only while a working Build of `trivial` lists the Root's `rootContract` | New | unit: `roots.ready`, `roots.states`; real-server acceptance with private Build records (SYL-160) |
+| RCT-0.11 | write into a new Root's `root.json`, as `rootContract`, the version named with `--root-contract`, by default the version of the Root named with `--from` and else 1, and never change it afterwards | New | unit: `roots.create`, `roots.create-from`, `roots.create-refusal`, `roots.states`; real-server `real_server_example` in `arbol:tests/test_roots.py` (SYL-160) Installed First Sapling creation and Jensen lineage/contract inheritance in `sapling.second-root-created` (SYL-186/SYL-189). |
+| RCT-0.13 | mark a Root `working` only while a working Build of `trivial` lists the Root's `rootContract` | New | unit: `roots.ready`, `roots.states`; real-server acceptance with private Build records (SYL-160) Installed `sapling.jensen-ready` makes Jensen working/current only with compatible Trivial Build 3, preserves explicit Sapling use and resolves the default manager to Jensen (SYL-189). |
+
+Implementation status reviewed on 27 October 2026 for Root Manager Arc closure: the Trivial Trunk package and contract checks (SYL-171–180), launcher checks (SYL-179), global catalogue checks (SYL-160), and actual retained-Root creation/readiness/compatible manager acceptance (SYL-186/SYL-188/SYL-189) cover every requirement above. This marks RCT-0 implemented; it does not change RCT-1 to RCT-3 or the backend/App/UI acceptance scope.
+
+<!-- sources:
+arbol-root:roots/sapling/drills/jensen_creation.py#make_jensen
+arbol-root:roots/sapling/drills/migration_drills.py#ready
+-->
 
 ## Interface
 
