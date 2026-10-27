@@ -354,6 +354,18 @@ arbol-root:roots/sapling/drills/trunk_drill_support.py#Exchange.finish
 arbol-root:roots/sapling/drills/trunk_drill_support.py#ended_identity
 -->
 
+<!-- sources:
+arbol-root:roots/sapling/drills/stopping_drills.py#obeyed
+arbol-root:roots/sapling/drills/stopping_drills.py#not_obeyed
+arbol-root:roots/sapling/drills/stopping_drills.py#end_already_written
+arbol-root:roots/sapling/drills/stopping_drills.py#force
+arbol-root:roots/sapling/drills/stopping_drills.py#killed_while_waiting
+arbol-root:roots/sapling/drills/stopping_drills.py#killed_while_forcing
+arbol-root:roots/sapling/drills/stopping_support.py#frozen
+arbol-root:roots/sapling/drills/stopping_support.py#Manager
+arbol-root:roots/sapling/drills/stopping_support.py#stop_state
+-->
+
 ## Requirements
 
 A Trunk:
@@ -385,7 +397,7 @@ The Root manager:
 | ID | The Root manager must… | Origin | Verified by |
 |---|---|---|---|
 | RCT-2.14 | start a Trunk only through `arbol-trunk`, naming the Root, the code name, the Build and the Exchange, with `--detach`, detached from the terminal in a process group of its own, and with the folder of the launchers first on the search path | New | unit: `root.start-launch`, `root.start-named`, `root.start-chosen`, `root.start-acceptance`, `root.start-timeout`, `root.start-no-request-read`; private `root.private-build` (SYL-182) |
-| RCT-2.15 | stop an Exchange by a stop line in `control`, count it as ended once its record has `end` or its folder is gone, end processes by force only by signals to the process group of a record whose process lives, and save an Exchange whose process is gone only through `settle` | Changed | Root manager unit: `root.stop-control`, `root.stop-dead`, `root.stop-disappearance`, `root.stop-force-term`, `root.stop-force-kill`, `root.stop-orphaned-child`, `root.stop-group-identity`, `root.settle-named`, `root.stop-complete-clock` (SYL-183). Real-Root drill: SYL-188 pending |
+| RCT-2.15 | stop an Exchange by a stop line in `control`, count it as ended once its record has `end` or its folder is gone, end processes by force only by signals to the process group of a record whose process lives, and save an Exchange whose process is gone only through `settle` | Changed | Root manager unit: `root.stop-control`, `root.stop-dead`, `root.stop-disappearance`, `root.stop-force-term`, `root.stop-force-kill`, `root.stop-orphaned-child`, `root.stop-group-identity`, `root.settle-named`, `root.stop-complete-clock` (SYL-183). Installed real-scale `sapling.stop-obeyed`, `sapling.stop-not-obeyed`, `sapling.stop-end-already-written`, `sapling.stop-force`, `sapling.stop-force-ignored-term`, `sapling.root-killed-while-waiting` and `sapling.root-killed-while-forcing`; aggregate `sapling.stopping-drills` (SYL-188) |
 
 Arbol:
 
