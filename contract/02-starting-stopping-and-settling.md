@@ -403,7 +403,7 @@ Arbol:
 
 | ID | Arbol must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-2.16 | show an Exchange as stopped only once its end says `cancelled`, and show a failed Exchange with its cause, a code it does not know with its message | Changed | backend forwarding of known/unknown send refusal codes/messages: `sending.refusal`, `sending.safe-errors`, `sending.error-shape` (SYL-250); stopped/end and live failed presentation remain SYL-251, actual window journey SYL-257 |
+| RCT-2.16 | show an Exchange as stopped only once its end says `cancelled`, and show a failed Exchange with its cause, a code it does not know with its message | Changed | backend forwarding of known/unknown send refusal codes/messages: `sending.refusal`, `sending.safe-errors`, `sending.error-shape` (SYL-250); stopped/end and live failed presentation remain SYL-251, actual window journey SYL-257 Backend stop/answer/live boundaries: `stop.forwarding`, `stop.safe-errors`, `stop.confirmed-end`, `answers.form`, `answers.current-ask`, `live.saved` (SYL-251); actual window journey remains SYL-257. |
 
 ## Interface
 
@@ -466,6 +466,13 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 <!-- sources:
 arbol:src/arbol_backend/dispatch.py#Dispatch.result
 arbol:tests/backend/test_dispatch.py#Sending.test_definite_refusal_source_message_and_mark_clear
+-->
+
+<!-- sources:
+arbol:src/arbol_backend/controls.py#Controls.result
+arbol:src/arbol_backend/answers.py#current
+arbol:tests/backend/test_controls.py#Stopping
+arbol:tests/backend/test_answers.py#Answering
 -->
 
 ## Decisions

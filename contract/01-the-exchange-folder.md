@@ -246,14 +246,14 @@ The Root manager and the Arbol backend, as writers of `control`:
 
 | ID | A writer of `control` must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-1.8 | append only whole lines of the Driver's control input, of at most 64 KiB, each with one write on a file opened for appending, never create the file, and wait up to 15 seconds while only `.<exchange>.new` exists | New | Root manager: unit `root.stop-control`, `root.stop-control-refusal`, `root.stop-short-write`, `root.stop-publication`, `root.management-boundary` (SYL-183). The backend answer-writer part is specified by accepted BKD-0.17 and remains backend implementation work |
+| RCT-1.8 | append only whole lines of the Driver's control input, of at most 64 KiB, each with one write on a file opened for appending, never create the file, and wait up to 15 seconds while only `.<exchange>.new` exists | New | Root manager: unit `root.stop-control`, `root.stop-control-refusal`, `root.stop-short-write`, `root.stop-publication`, `root.management-boundary` (SYL-183). Backend answer-writer: `answers.one-write`, `answers.byte-limit`, `answers.short-write`, `answers.no-create`, `answers.file-identity`, `answers.publication`, `answers.ended` (SYL-251). |
 
 Every reader of an Exchange folder:
 
 | ID | A reader must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-1.9 | skip a folder whose name starts with a dot and a last line of `events.jsonl` that does not end with a newline, and ignore every field, line and event type it does not know | New | Root manager part: unit `root.list-states`, `root.list-boundary`, `root.list-forward-compatible`, `root.list-form` (SYL-182); it reads no events file. The backend part is specified by accepted BKD-0.15 and remains backend implementation work |
-| RCT-1.10 | take a record's process as living only when a process with its `pid` exists and was started at its `startedAt`, give or take two seconds | New | Root manager part: unit `root.list-process`, `root.list-process-environment`, `root.list-record-validation` (SYL-182). The backend part is specified by accepted BKD-0.15 and remains backend implementation work |
+| RCT-1.9 | skip a folder whose name starts with a dot and a last line of `events.jsonl` that does not end with a newline, and ignore every field, line and event type it does not know | New | Root manager part: unit `root.list-states`, `root.list-boundary`, `root.list-forward-compatible`, `root.list-form` (SYL-182); it reads no events file. Backend: `live.private-files`, `live.partial-line`, `live.forward-compatibility`, `live.malformed-lines`, `live.streaming-metadata`, `live.outside-folder` (SYL-251). |
+| RCT-1.10 | take a record's process as living only when a process with its `pid` exists and was started at its `startedAt`, give or take two seconds | New | Root manager part: unit `root.list-process`, `root.list-process-environment`, `root.list-record-validation` (SYL-182). Backend: `live.process-identity`, `live.process-environment`, `live.process-failure`, `live.record-validation` (SYL-251). |
 
 ## Interface
 
@@ -312,6 +312,16 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Stored versus live-only, and how a window reconciles them`
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Failures and what the Leather Bag sees`
 - `arbol_deprecated_v1:product-spec/12-lessons-and-invariants.md#3. Durable bookkeeping on the streaming path`
+
+<!-- sources:
+arbol:src/arbol_backend/answers.py#Answers.write
+arbol:src/arbol_backend/event_file.py#Scanner
+arbol:src/arbol_backend/exchange_files.py#Folders
+arbol:src/arbol_backend/exchange_files.py#processes
+arbol:tests/backend/test_answers.py#Answering
+arbol:tests/backend/test_exchange_files.py#Files
+arbol:tests/backend/test_event_file.py#Events
+-->
 
 ## Decisions
 
