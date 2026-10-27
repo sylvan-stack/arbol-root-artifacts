@@ -139,7 +139,7 @@ arbol:src/arbol_roots/sql.py#migration_directory
 
 ### The Root's own layout
 
-`roots/<root>/layout.sql` holds the tables that only this Root has: Arbol's own tables, which Arbol's own specification states, and, for a Root that grew from another, `migrated_chats` ([below](#where-a-migrated-chat-came-from)). It follows the rules of the chat tables' file (RCT-3): every statement can run again, and every table and column has a comment. In the first thin path the file of the first Root may hold no statement at all.
+`roots/<root>/layout.sql` holds the tables that only this Root has: Arbol's own tables, which Arbol's own specification states, and, for a Root that grew from another, `migrated_chats` ([below](#where-a-migrated-chat-came-from)). It follows the rules of the chat tables' file (RCT-3): every statement can run again, and every table, column and sequence has a comment. In the first thin path the file of the first Root may hold no statement at all.
 
 A later Build of the same Root may only add to this file what the Root's older Builds can ignore (ARC-1): a new table, and on a table that exists a column that may be NULL or has a default, or an index that is not unique. It adds no check, no unique index and no column that is NOT NULL without a default to a table that exists, because the writes of the older Builds would then fail. Each addition is a statement of its own that can run again, such as `ALTER TABLE drafts ADD COLUMN IF NOT EXISTS pinned boolean NOT NULL DEFAULT false`. A statement that an earlier Build carried is never edited: on a Root in use, `IF NOT EXISTS` would skip the edit, and a new database would differ from the one in use. Any other change needs a new Root (ARC-1). The chat tables of a Root Contract version have no additions in version 1 ([RCT-D24](../contract/03-the-chat-tables.md#decisions)).
 
@@ -285,7 +285,7 @@ arbol:tests/test_roots_sql.py#InUseModes
 
 Implementation choices (RTM-D22/D23): the two checks reuse this repository's conformance Server and catalogue reader, never another component's code. Preflight names all five required programs before creating a server; a no-lineage migration passes before needing a server. Each check owns and removes its temporary server, short socket directory and private home. SQL clients explicitly name that socket/database, use absolute tool paths, and the migration invocation has only HOME/PATH/LANG, an empty mode-0700 working directory, ON_ERROR_STOP and the two private database/Root variables. The existing 60-second SQL-client bound applies; no owner PG variables or credentials are used. Build input comes from its validated record and copied-layout manifest; the older Root's identifier/version is validated once from its header and the packaged checkout supplies its version/layout files.
 
-Layout comparison uses both the logical PostgreSQL catalogue and pg_dump --schema-only --no-owner --no-privileges, with a fixed psql restrict key when the client supports that option. It requires unchanged earlier schema objects and comments, rejects new constraints/unique indexes on existing tables and new NOT NULL columns without defaults, and requires identical old-then-new/fresh schemas. Earlier complete SQL statements must remain in order, allowing only whitespace/case/comment changes outside quoted values; literal values and COMMENT statements retain their contents. The specified plain table/index/column/comment DDL is accepted; client metadata commands and data-writing statements are refused. This keeps layouts within their prescribed job and makes the statement-preservation rule independently checkable. New tables may have their own constraints; additions to older tables obey the narrower rule above. The comparison uses the highest lower hexadecimal Build with a readable matching working/unpruned record and both layout files; missing/damaged/ineligible records are not a qualified baseline, and the report identifies the baseline it used.
+Layout comparison uses both the logical PostgreSQL catalogue and pg_dump --schema-only --no-owner --no-privileges, with a fixed psql restrict key when the client supports that option. It requires unchanged earlier schema objects and comments, rejects new constraints/unique indexes on existing tables and new NOT NULL columns without defaults, and requires identical old-then-new/fresh schemas. Earlier complete SQL statements must remain in order, allowing only whitespace/case/comment changes outside quoted values; literal values and COMMENT statements retain their contents. The specified plain table/index/column/comment DDL plus repeatable sequence creation and sequence comments is accepted; client metadata commands and data-writing statements are refused. This keeps layouts within their prescribed job and makes the statement-preservation rule independently checkable. New tables may have their own constraints; additions to older tables obey the narrower rule above. The comparison uses the highest lower hexadecimal Build with a readable matching working/unpruned record and both layout files; missing/damaged/ineligible records are not a qualified baseline, and the report identifies the baseline it used.
 
 Migration qualification uses the prescribed two-connection protocol, one REPEATABLE READ READ ONLY source transaction and one destination transaction; connection/file metadata commands must keep both databases on the private server and every copy file in the private working directory. It checks the actual row invariants against fictional data, source immutability, the snapshot interval and identical migrated_at/open ended_at times, all unchanged tables and byte-exact text/JSON values, and a fresh repeated run excluding only snapshot times. The fixture contains two chats, a replaced failed Exchange, completed/cancelled history and an open Exchange, with emoji/U+FFFD/CRLF/tab/backslash/trailing spaces and whole nested JSON. Missing-source and missing-destination-table runs must exit 3 and leave the destination empty. A private READ ONLY write refusal and protocol validation establish the source transaction rule; planted protocol/data/rollback faults must fail qualification. Check code and fictional SQL fixtures are packaged; the owner's production Root identifier is never inferred from a fixture.
 
@@ -407,17 +407,84 @@ COMMENT ON COLUMN migrated_chats.from_root IS 'The identifier of the Root it cam
 COMMENT ON COLUMN migrated_chats.from_chat IS 'The chat''s identifier in that Root; the same as chat_id for a chat copied as it was.';
 COMMENT ON COLUMN migrated_chats.ended_through IS 'How far the original had got when it was read: the number of its last Exchange that had ended, 0 when none had.';
 COMMENT ON COLUMN migrated_chats.migrated_at IS 'When the older database was read: the moment of the snapshot the copy shows.';
+
+-- Compatible addition for comparing and refreshing migrated copies (RTM-1.12).
+ALTER TABLE migrated_chats ADD COLUMN IF NOT EXISTS stale boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN migrated_chats.stale IS 'Whether the original has a later ended Exchange than ended_through; changed only by an explicit comparison or successful reimport.';
+
+-- The Arbol backend's own tables (BKD-0). Written by the Arbol backend alone.
+
+CREATE SEQUENCE IF NOT EXISTS drafts_revision;
+COMMENT ON SEQUENCE drafts_revision IS 'The one counter of the revisions of every Draft, so that no revision is given twice, also after a Draft was removed.';
+
+CREATE TABLE IF NOT EXISTS drafts (
+  id              uuid        PRIMARY KEY,
+  chat_id         uuid        UNIQUE REFERENCES chats (id) ON DELETE RESTRICT,
+  folder          text        UNIQUE CHECK (folder IS NULL OR folder LIKE '/%'),
+  text            text        NOT NULL,
+  revision        bigint      NOT NULL CHECK (revision >= 1),
+  sent_as         uuid,
+  sent_request    jsonb       CHECK (sent_request IS NULL OR jsonb_typeof(sent_request) = 'object'),
+  updated_at      timestamptz NOT NULL,
+  CHECK ((chat_id IS NULL) <> (folder IS NULL)),
+  CHECK ((sent_as IS NULL) = (sent_request IS NULL))
+);
+COMMENT ON TABLE drafts IS 'What the Leather Bag typed in a composer and has not sent: one Draft of the reply for each chat, and one Draft of a new chat for each repository folder. Written by the Arbol backend alone (BKD-0).';
+COMMENT ON COLUMN drafts.id IS 'The Draft''s own identifier, a UUID the backend gives it.';
+COMMENT ON COLUMN drafts.chat_id IS 'For the Draft of a reply: its chat, for example c3d4e5f6-0718-4293-a4b5-c6d7e8f90a1b; NULL for the Draft of a new chat.';
+COMMENT ON COLUMN drafts.folder IS 'For the Draft of a new chat: the absolute folder of its repository, for example /Users/sam/repos/shop; NULL for the Draft of a reply.';
+COMMENT ON COLUMN drafts.text IS 'The text as the Leather Bag typed it, exactly.';
+COMMENT ON COLUMN drafts.revision IS 'A new value of drafts_revision each time the Draft is saved. A save names the revision it was made over and is refused when that is no longer the Draft''s.';
+COMMENT ON COLUMN drafts.sent_as IS 'The Exchange this Draft was sent as and not yet accepted or refused, for example 9b3a2c1e-5c6d-4f70-9a1b-2c3d4e5f6a7b; NULL when it is not being sent. Cleared by a save, which brings new text. The Draft is removed once that Exchange is in the chat tables.';
+COMMENT ON COLUMN drafts.sent_request IS 'With sent_as: what the Draft was sent with, so that a send left half done can be made again with the same Exchange, for example {"chat": "c3d4e5f6-…", "route": {"driver": "claude", "subscription": "anthropic", "model": "sonnet"}, "workingFolder": "/Users/sam/repos/sylvan-stack/readonly/shop"}.';
+COMMENT ON COLUMN drafts.updated_at IS 'When the Draft was last saved.';
+
+CREATE TABLE IF NOT EXISTS chat_settings (
+  chat_id         uuid        PRIMARY KEY REFERENCES chats (id) ON DELETE RESTRICT,
+  route           jsonb       CHECK (route IS NULL OR jsonb_typeof(route) = 'object'),
+  working_folder  text        CHECK (working_folder IS NULL OR working_folder LIKE '/%'),
+  updated_at      timestamptz NOT NULL
+);
+COMMENT ON TABLE chat_settings IS 'What the Leather Bag picked for a chat''s next message, where it differs from the chat''s last Exchange. Written by the Arbol backend alone (BKD-0).';
+COMMENT ON COLUMN chat_settings.chat_id IS 'The chat.';
+COMMENT ON COLUMN chat_settings.route IS 'The route picked for the next message, in the form of ARC-0, for example {"driver": "claude", "subscription": "anthropic", "model": "sonnet", "effort": "high"}; NULL: the route of the last Exchange.';
+COMMENT ON COLUMN chat_settings.working_folder IS 'The absolute folder picked for the next message, for example /Users/sam/repos/shop; NULL: the folder of the last Exchange.';
+COMMENT ON COLUMN chat_settings.updated_at IS 'When a choice was last saved.';
+
+CREATE TABLE IF NOT EXISTS chat_marks (
+  chat_id      uuid        PRIMARY KEY REFERENCES chats (id) ON DELETE RESTRICT,
+  ongoing      boolean     NOT NULL DEFAULT false,
+  archived_at  timestamptz,
+  updated_at   timestamptz NOT NULL
+);
+COMMENT ON TABLE chat_marks IS 'The marks the Leather Bag gives a chat in Elma Chat. Written by the Arbol backend alone (BKD-0).';
+COMMENT ON COLUMN chat_marks.chat_id IS 'The chat.';
+COMMENT ON COLUMN chat_marks.ongoing IS 'true while the Leather Bag marks the chat as one still being worked on (Elma Chat, Ongoing).';
+COMMENT ON COLUMN chat_marks.archived_at IS 'When the Leather Bag archived the chat; NULL while it is not archived. An archived chat leaves the latest chats.';
+COMMENT ON COLUMN chat_marks.updated_at IS 'When a mark was last changed.';
+
+CREATE TABLE IF NOT EXISTS exchange_notes (
+  exchange_id  uuid        NOT NULL REFERENCES exchanges (id) ON DELETE RESTRICT,
+  kind         text        NOT NULL CHECK (kind IN ('ended_stuck')),
+  at           timestamptz NOT NULL,
+  PRIMARY KEY (exchange_id, kind)
+);
+COMMENT ON TABLE exchange_notes IS 'What Arbol says about an Exchange that the chat tables do not hold. Written by the Arbol backend alone (BKD-0).';
+COMMENT ON COLUMN exchange_notes.exchange_id IS 'The Exchange the note is about.';
+COMMENT ON COLUMN exchange_notes.kind IS 'ended_stuck: the backend ended the Exchange by force because its heartbeat stood still (ARC-3).';
+COMMENT ON COLUMN exchange_notes.at IS 'When the backend decided it.';
 ```
 
 The migration script of the second Root, `roots/<second>/migrate.sql`, whole:
 
 ```sql
+-- Optional modes are qualified by migration-modes.json (RTM-D28/D29/D30).
 -- The second Root's migration script (RTM-1): brings the chats of First Sapling into the second Root's database.
 -- Kept in the arbol-root repository as roots/<second>/migrate.sql; the second Root's arbol-root Builds carry it as layout/migrate.sql.
 -- arbol-roots runs it with psql, connected to the second Root's database just made from the second Root's layouts, in an empty folder of
 -- its own (mode 0700) that it removes afterwards:
 --   psql --no-psqlrc --set ON_ERROR_STOP=1 --set from_database=arbol_sapling --set from_root=sapling \
---        --file migrate.sql postgresql://arbol@127.0.0.1:5432/arbol_<second>
+--        --file migrate.sql postgresql://arbol@127.0.0.1:5432/arbol_jensen
 -- First Sapling and the second Root use Root Contract version 1, so every chat table is copied as it is.
 
 \set to_database :DBNAME
@@ -431,16 +498,50 @@ SELECT now() AS snapshot \gset
 \copy (SELECT * FROM messages) TO 'messages.copy' WITH (FORMAT binary)
 \copy (SELECT * FROM tool_calls) TO 'tool_calls.copy' WITH (FORMAT binary)
 \copy (SELECT * FROM runs) TO 'runs.copy' WITH (FORMAT binary)
+\copy (SELECT * FROM drafts) TO 'drafts.copy' WITH (FORMAT binary)
+\copy (SELECT * FROM chat_settings) TO 'chat_settings.copy' WITH (FORMAT binary)
+\copy (SELECT * FROM chat_marks) TO 'chat_marks.copy' WITH (FORMAT binary)
+\copy (SELECT * FROM exchange_notes) TO 'exchange_notes.copy' WITH (FORMAT binary)
+\copy (SELECT d.last_value,d.is_called,(s.seqtypid='bigint'::regtype AND s.seqincrement=1 AND s.seqmin=1 AND s.seqmax=9223372036854775807 AND s.seqcache=1 AND NOT s.seqcycle) AS valid_definition FROM drafts_revision d JOIN pg_sequence s ON s.seqrelid='drafts_revision'::regclass) TO 'drafts_revision.copy' WITH (FORMAT binary)
 COMMIT;
 
 -- 2. Write the second Root's tables in one transaction, so that a failure leaves no row.
 \connect :to_database
 BEGIN;
+SET LOCAL lock_timeout='2s';
+DO $$
+BEGIN
+  IF to_regclass('drafts') IS NULL OR to_regclass('chat_settings') IS NULL
+     OR to_regclass('chat_marks') IS NULL OR to_regclass('exchange_notes') IS NULL
+     OR to_regclass('drafts_revision') IS NULL THEN
+    RAISE EXCEPTION 'The target backend layout is incomplete';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_sequence WHERE seqrelid='drafts_revision'::regclass
+      AND seqtypid='bigint'::regtype AND seqincrement=1 AND seqmin=1
+      AND seqmax=9223372036854775807 AND seqcache=1 AND NOT seqcycle) THEN
+    RAISE EXCEPTION 'The target Draft revision counter is incompatible';
+  END IF;
+END $$;
+CREATE TEMP TABLE incoming_drafts_revision (
+  last_value bigint NOT NULL, is_called boolean NOT NULL, valid_definition boolean NOT NULL
+) ON COMMIT DROP;
+\copy incoming_drafts_revision FROM 'drafts_revision.copy' WITH (FORMAT binary)
+DO $$
+BEGIN
+  IF (SELECT count(*) FROM incoming_drafts_revision)<>1
+     OR EXISTS (SELECT 1 FROM incoming_drafts_revision WHERE last_value<1 OR NOT valid_definition) THEN
+    RAISE EXCEPTION 'The source Draft revision counter is incompatible';
+  END IF;
+END $$;
 \copy chats FROM 'chats.copy' WITH (FORMAT binary)
 \copy exchanges FROM 'exchanges.copy' WITH (FORMAT binary)
 \copy messages FROM 'messages.copy' WITH (FORMAT binary)
 \copy tool_calls FROM 'tool_calls.copy' WITH (FORMAT binary)
 \copy runs FROM 'runs.copy' WITH (FORMAT binary)
+\copy drafts FROM 'drafts.copy' WITH (FORMAT binary)
+\copy chat_settings FROM 'chat_settings.copy' WITH (FORMAT binary)
+\copy chat_marks FROM 'chat_marks.copy' WITH (FORMAT binary)
+\copy exchange_notes FROM 'exchange_notes.copy' WITH (FORMAT binary)
 
 -- Where each chat came from and how far it had got, counted before open Exchanges change.
 INSERT INTO migrated_chats (chat_id, from_root, from_chat, ended_through, migrated_at)
@@ -450,6 +551,21 @@ GROUP BY c.id;
 
 -- An Exchange still open in First Sapling is only history here: interrupted, at the moment of the snapshot.
 UPDATE exchanges SET state = 'interrupted', ended_at = :'snapshot' WHERE state = 'open';
+
+-- A transactionally locked restart neither reuses a consumed/deleted revision nor survives rollback.
+DO $$
+DECLARE following numeric;
+BEGIN
+  ALTER SEQUENCE drafts_revision CACHE 1;
+  SELECT greatest(1::numeric,
+    (SELECT last_value::numeric+is_called::integer FROM incoming_drafts_revision),
+    (SELECT last_value::numeric+is_called::integer FROM drafts_revision),
+    (SELECT coalesce(max(revision)::numeric,0)+1 FROM drafts)) INTO following;
+  IF following>9223372036854775807 THEN
+    RAISE EXCEPTION 'The Draft revision counter is exhausted';
+  END IF;
+  EXECUTE format('ALTER SEQUENCE drafts_revision RESTART WITH %s',following);
+END $$;
 COMMIT;
 ```
 
