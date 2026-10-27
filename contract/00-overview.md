@@ -39,6 +39,14 @@ Who writes and who reads what this contract fixes:
 | The table layout of the chat tables | `contract/<version>/layout.sql` in the `arbol-root` repository | By hand, in the repository | `arbol-roots`, which runs it from `layout/chat-tables.sql` of the Root's `arbol-root` Build (RTM-1) |
 | A Trunk's own settings, if it has any | `~/.arbol/arbol-trunk/<code name>.json` ([below](#a-trunks-own-settings)) | The owner | That Trunk |
 
+<!-- sources:
+arbol:src/arbol_roots/operations.py#exchanges_directory
+arbol:src/arbol_roots/operations.py#Creation
+arbol:src/arbol_roots/operations.py#ready
+arbol:tests/test_roots.py#Commands.test_roots_ready_repairs_a_legacy_exchange_directory_and_preserves_existing_payload_and_mode
+arbol:tests/test_roots.py#Commands.test_roots_ready_refuses_file_and_symlink_exchange_paths_without_changing_the_record
+-->
+
 ### Trunks and their code names
 
 A Trunk is named by a *code name*, never by a number ([RCT-D2](#decisions)). A code name is one lower-case word of 1 to 32 letters and digits that starts with a letter, such as `trivial` or `advanced`, and it is never one of the command words of this contract, `run`, `settle` and `list`.
