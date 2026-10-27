@@ -403,7 +403,7 @@ Arbol:
 
 | ID | Arbol must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-2.16 | show an Exchange as stopped only once its end says `cancelled`, and show a failed Exchange with its cause, a code it does not know with its message | Changed | journey |
+| RCT-2.16 | show an Exchange as stopped only once its end says `cancelled`, and show a failed Exchange with its cause, a code it does not know with its message | Changed | backend forwarding of known/unknown send refusal codes/messages: `sending.refusal`, `sending.safe-errors`, `sending.error-shape` (SYL-250); stopped/end and live failed presentation remain SYL-251, actual window journey SYL-257 |
 
 ## Interface
 
@@ -462,6 +462,11 @@ Historical evidence (frozen version 1; ordinary locators, not Source Refs):
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Known problems and lessons`
 - `arbol_deprecated_v1:product-spec/03-turn-execution.md#Usage accounting`
 - `arbol_deprecated_v1:grafts/arbol-trunks/m8-installed-acceptance.md#2026-09-01 continuation — duplicate edit redrive diagnosis and fix`
+
+<!-- sources:
+arbol:src/arbol_backend/dispatch.py#Dispatch.result
+arbol:tests/backend/test_dispatch.py#Sending.test_definite_refusal_source_message_and_mark_clear
+-->
 
 ## Decisions
 
