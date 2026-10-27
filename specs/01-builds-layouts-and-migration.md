@@ -139,7 +139,7 @@ arbol:src/arbol_roots/sql.py#migration_directory
 
 ### The Root's own layout
 
-`roots/<root>/layout.sql` holds the tables that only this Root has: Arbol's own tables, which Arbol's own specification states, and, for a Root that grew from another, `migrated_chats` ([below](#where-a-migrated-chat-came-from)). It follows the rules of the chat tables' file (RCT-3): every statement can run again, and every table, column and sequence has a comment. In the first thin path the file of the first Root may hold no statement at all.
+`roots/<root>/layout.sql` holds the tables that only this Root has: Arbol's own tables, which Arbol's own specification states, and, for a Root that grew from another, `migrated_chats` ([below](#where-a-migrated-chat-came-from)). It follows the rules of the chat tables' file (RCT-3): every statement can run again, and every table, column and sequence has a comment. In the first thin path the file of the first Root may hold no statement at all. Since SYL-247 both files carry the Arbol backend's own tables ([below](#backend-tables-in-layouts-and-migration)), and since SYL-297 Subscriptions Vigor's tables `vigor_profiles`, `vigor_reports` and `vigor_results` ([SGM-1](../../arbol/sagas/01-subscriptions-vigor.md), "The calculation record"), appended after the backend's, written by the Arbol process alone and copied by no migration, since a Root's records stay with the Root where they were made (SGM-D29). The migration check treats their empty tables as unchanged, so the fictional migration history seeds no Vigor row; `scripts/vigor_tables.py` holds their fictional rows for the layout checks and the guarded installed step that applies the layouts to the retained Roots.
 
 A later Build of the same Root may only add to this file what the Root's older Builds can ignore (ARC-1): a new table, and on a table that exists a column that may be NULL or has a default, or an index that is not unique. It adds no check, no unique index and no column that is NOT NULL without a default to a table that exists, because the writes of the older Builds would then fail. Each addition is a statement of its own that can run again, such as `ALTER TABLE drafts ADD COLUMN IF NOT EXISTS pinned boolean NOT NULL DEFAULT false`. A statement that an earlier Build carried is never edited: on a Root in use, `IF NOT EXISTS` would skip the edit, and a new database would differ from the one in use. Any other change needs a new Root (ARC-1). The chat tables of a Root Contract version have no additions in version 1 ([RCT-D24](../contract/03-the-chat-tables.md#decisions)).
 
@@ -356,6 +356,12 @@ arbol-root:roots/sapling/drills/backend_layout_drills.py#state
 arbol-root:roots/sapling/drills/backend_layout_drills.py#preserved
 arbol-root:roots/sapling/drills/backend_layout_drills.py#run
 arbol-root:roots/sapling/drills/drill-backend-layouts.py
+arbol-root:scripts/vigor_tables.py#seed
+arbol-root:scripts/vigor_tables.py#state
+arbol-root:scripts/vigor_tables.py#preserved
+arbol-root:scripts/vigor_tables.py#run
+arbol-root:tests/test_vigor_tables.py#VigorTables
+arbol-root:tests/test_vigor_tables.py#OperationalBoundary
 -->
 
 ## Requirements
@@ -372,7 +378,7 @@ The Root's own layout:
 
 | ID | The Root's own layout must… | Origin | Verified by |
 |---|---|---|---|
-| RTM-1.4 | be one file, `roots/<root>/layout.sql`, of statements that can run again, with a comment on every table, column and sequence, holding Arbol's own tables and, for a Root that grew from another, `migrated_chats` | New | unit/layout `root.backend-layouts`, `root.layout-sequence-comments`; older-Build/repeated-layout checks remain. Both Roots append the exact BKD schema; `sapling.backend-layouts` qualifies the installed additive application (SYL-247) |
+| RTM-1.4 | be one file, `roots/<root>/layout.sql`, of statements that can run again, with a comment on every table, column and sequence, holding Arbol's own tables and, for a Root that grew from another, `migrated_chats` | New | unit/layout `root.backend-layouts`, `root.layout-sequence-comments`; older-Build/repeated-layout checks remain. Both Roots append the exact BKD schema; `sapling.backend-layouts` qualifies the installed additive application (SYL-247). Subscriptions Vigor's tables: `root.vigor-layouts`, `root.vigor-rows`, `root.vigor-constraints`, `root.vigor-migration`, `root.vigor-preview`, `root.vigor-preservation`; installed `sapling.vigor-layouts` (SYL-297) |
 | RTM-1.5 | change in a later Build of the same Root only by additions its older Builds can ignore, which are a new table and, on a table that exists, a column that may be NULL or has a default and an index that is not unique, and never by editing a statement that an earlier Build carried | Changed | unit check `layout`: `root.layout-compatible-additions`, `root.layout-edited-statement`, `root.layout-required-column`, `root.layout-new-constraints`, `root.layout-baseline`, `root.layout-statements`; packaged prior-Build and planted-fault probes in `root.private-sql-builds` (SYL-184) Backend delta: `root.backend-whole`, `root.backend-counter-rollback`, `root.backend-counter-lock`, `root.backend-empty-counter`, `root.backend-counter-fault`, `root.backend-chat-state`; packaged migration also checks selected-SQL `backendRows` preservation/remapping (SYL-247). |
 
 A migration script:
@@ -494,6 +500,8 @@ COMMENT ON TABLE exchange_notes IS 'What Arbol says about an Exchange that the c
 COMMENT ON COLUMN exchange_notes.exchange_id IS 'The Exchange the note is about.';
 COMMENT ON COLUMN exchange_notes.kind IS 'ended_stuck: the backend ended the Exchange by force because its heartbeat stood still (ARC-3).';
 COMMENT ON COLUMN exchange_notes.at IS 'When the backend decided it.';
+
+-- Subscriptions Vigor's records follow (SGM-1, SYL-297): vigor_profiles, vigor_reports and vigor_results, as roots/<root>/layout.sql gives them.
 ```
 
 The migration script of the second Root, `roots/<second>/migrate.sql`, whole:
