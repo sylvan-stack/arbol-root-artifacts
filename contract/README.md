@@ -14,7 +14,7 @@ The owner named the contract on 15 October 2026 and decided its points the same 
 | [RCT-0](00-overview.md) | Overview | implemented |
 | [RCT-1](01-the-exchange-folder.md) | The Exchange folder | accepted |
 | [RCT-2](02-starting-stopping-and-settling.md) | Starting, stopping and settling | accepted |
-| [RCT-3](03-the-chat-tables.md) | The chat tables | accepted |
+| [RCT-3](03-the-chat-tables.md) | The chat tables | implemented |
 | [RCT-4](04-conformance.md) | Conformance | implemented |
 
 The table layout of contract version 1 is also a file of its own, `contract/1/layout.sql` in the `arbol-root` repository ([RCT-3](03-the-chat-tables.md#interface)).

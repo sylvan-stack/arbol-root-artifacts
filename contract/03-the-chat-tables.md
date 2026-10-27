@@ -1,7 +1,7 @@
 ---
 role: authored
 spec: RCT-3
-status: accepted
+status: implemented
 ---
 # Root Contract · 03 The chat tables
 
