@@ -185,9 +185,16 @@ Arbol:
 
 | ID | Arbol must… | Origin | Verified by |
 |---|---|---|---|
-| RCT-3.8 | read the chat tables directly, write in them only `chats.title` when the Leather Bag changes it, and leave out every Exchange that was replaced | Changed | unit |
+| RCT-3.8 | read the chat tables directly, write in them only `chats.title` when the Leather Bag changes it, and leave out every Exchange that was replaced | Changed | unit `chats.contract-assembly`, `chats.consistent-snapshot`, `chats.title-windows`, `chats.read-only-contract`, `chats.no-ddl` in arbol/tests/backend/ (SYL-249) |
 
 RCT-3.5 and RCT-3.7, on tables and columns added inside a Root, were taken out in review on 15 October 2026: contract version 1 has no additions (RCT-D24).
+
+<!-- sources:
+arbol:src/arbol_backend/chat_data.py#Reader
+arbol:src/arbol_backend/chats.py#Chats.rename
+arbol:tests/backend/test_chat_reader.py#Chats
+arbol:tests/backend/test_chat_wire.py#Windows.test_backend_needs_no_schema_or_history_write_permission
+-->
 
 ## Interface
 
