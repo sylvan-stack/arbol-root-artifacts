@@ -1,7 +1,7 @@
 ---
 role: authored
 spec: RTM-1
-status: accepted
+status: implemented
 ---
 # Root manager · 01 Builds, layouts and migration
 
