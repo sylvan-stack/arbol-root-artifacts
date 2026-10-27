@@ -1,7 +1,7 @@
 ---
 role: authored
 spec: RTM-0
-status: accepted
+status: implemented
 ---
 # Root manager · 00 The commands
 
@@ -354,7 +354,7 @@ The Root manager:
 | RTM-0.15 | take the Root's folder from `--root-dir` and the folder of the launchers from `--bin-dir` when they are given, start `arbol-trunk` from that folder with the folder first on the search path, and refuse `--root-dir` without `--bin-dir` | New | unit: `root.identity`, `root.trunks`, `root.input` (SYL-181) |
 | RTM-0.16 | refuse with `trunk_unavailable` when `arbol-trunk` cannot be started, or its `list` or `settle` ends without a line that is a JSON object | New | unit: `root.trunk-unavailable`, `root.start-cleanup`, Selection.test_malformed_or_wrong_inventory_is_unavailable, `root.settle-unavailable`, `root.settle-selection`, `root.settle-reply-identity` (SYL-181/182/183) |
 
-SYL-183 supplies the stop/settle implementation and unit checks. SYL-188 qualifies RTM-0.9 and RTM-0.10 on retained First Sapling at real timing, including known ends, killed manager commands and a same-group child that ignores SIGTERM. All eight cases pass together in `run-stopping-drills.py --run`; the newer-manager case reuses the retained qualified Build receipt after checking its exact source/status/checks and chosen identity. Root Manager acceptance remains open through SYL-189’s migration drills.
+SYL-183 supplies the stop/settle implementation and unit checks. SYL-188 qualifies RTM-0.9 and RTM-0.10 on retained First Sapling at real timing, including known ends, killed manager commands and a same-group child that ignores SIGTERM. All eight cases pass together in `run-stopping-drills.py --run`; the newer-manager case reuses the retained qualified Build receipt after checking its exact source/status/checks and chosen identity. SYL-189 completes actual Jensen migration/failure/open-Exchange acceptance with a working manager Build 4 and unchanged First Sapling ownership. RTM-0 is implemented; App/backend discovery and presentation remain outside this specification.
 
 RTM-0.7 is checked against a listing kept in the repository, to which a later Build may only add fields. RTM-0.10's `not_ended` and RTM-0.12's clock are checked inside the program's own process, because no stand-in outlives SIGKILL or makes the Mac sleep.
 

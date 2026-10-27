@@ -1,7 +1,7 @@
 ---
 role: authored
 spec: RTM-1
-status: accepted
+status: implemented
 ---
 # Root manager · 01 Builds, layouts and migration
 
@@ -209,6 +209,19 @@ arbol-root:tests/fixtures/migration-root/layout.sql
 arbol-root:tests/test_migration_check.py#MigrationCheck
 -->
 
+<!-- sources:
+arbol-root:roots/sapling/drills/migration_drills.py#failure
+arbol-root:roots/sapling/drills/migration_drills.py#judge_copy
+arbol-root:roots/sapling/drills/migration_drills.py#open_exchange
+arbol-root:roots/sapling/drills/migration_support.py#Snapshot
+arbol-root:roots/sapling/drills/migration_support.py#SourceLock
+arbol-root:roots/sapling/drills/migration_support.py#Command
+arbol-root:roots/sapling/drills/migration_support.py#direct_psql
+arbol-root:roots/sapling/drills/migration_support.py#client_folder
+arbol-root:roots/sapling/drills/migration_support.py#thaw_client
+arbol-root:tests/test_migration_drills.py#MigrationHelpers
+-->
+
 ### The checks of a Build
 
 `arbol-build.json` names three checks. Each starts the Build's own program or runs the Build's own files, not through a launcher (BLD-0); `layout` also runs the files of an earlier Build of the same Root:
@@ -255,13 +268,19 @@ arbol-root:tests/program_support.py#development
 arbol-root:tests/management_support.py#Fixture
 -->
 
+<!-- sources:
+arbol-root:roots/sapling/drills/jensen_creation.py#settings
+arbol-root:roots/sapling/drills/jensen_creation.py#make_jensen
+arbol-root:tests/test_migration_drills.py#Creation
+-->
+
 ## Requirements
 
 An `arbol-root` Build:
 
 | ID | An `arbol-root` Build must… | Origin | Verified by |
 |---|---|---|---|
-| RTM-1.1 | be made for the Root named with `arbol-builds build arbol-root --root <root>`, and carry `layout/chat-tables.sql`, a copy of `contract/<rootContract>/layout.sql` for its Root's version, `layout/root-tables.sql`, a copy of `roots/<root>/layout.sql`, and, exactly when its Root grew from another, `layout/migrate.sql`, a copy of `roots/<root>/migrate.sql` | New | unit: `root.layout-copy`, `root.layout-lineage`, `root.layout-metadata`, `root.package`, `root.package-integrity`; private integration: `root.private-build` (SYL-181) |
+| RTM-1.1 | be made for the Root named with `arbol-builds build arbol-root --root <root>`, and carry `layout/chat-tables.sql`, a copy of `contract/<rootContract>/layout.sql` for its Root's version, `layout/root-tables.sql`, a copy of `roots/<root>/layout.sql`, and, exactly when its Root grew from another, `layout/migrate.sql`, a copy of `roots/<root>/migrate.sql` | New | unit: `root.layout-copy`, `root.layout-lineage`, `root.layout-metadata`, `root.package`, `root.package-integrity`; private integration: `root.private-build` (SYL-181) Actual Jensen manager Build 4 from clean merged 015f905 passes all three packaged checks; all three copied SQL files match the source byte-for-byte and owner database stays empty (`sapling.second-root-created`, SYL-189). |
 | RTM-1.2 | fail to build when a file it has to carry is missing from the repository | New | unit: `root.layout-missing`, `root.layout-lineage`; private integration: `root.private-build` missing-layout Build (SYL-181) |
 | RTM-1.3 | have the checks `unit`, `layout` and `migration`, and run the last two only on a PostgreSQL server of the check's own in a temporary folder, listening only on a socket, never on the installed server | New | unit: `root.sql-private-server`, `root.sql-cleanup`, `root.sql-tools`, `root.sql-input`, `root.package-integrity`; private Build integration: `root.private-sql-builds`, with named unit/layout/migration and packaged missing-tool probes (SYL-184); packaged-interpreter fixture regression `sapling.commands` (spaces/quote alias, literal arguments, direct and clean-login refusals) and actual `root.private-build` with 154 Root / 52 contract tests under packaged CPython, plus intentional missing-layout failure (SYL-293) |
 
@@ -277,11 +296,11 @@ A migration script:
 | ID | A migration script must… | Origin | Verified by |
 |---|---|---|---|
 | RTM-1.6 | be one file, `roots/<root>/migrate.sql`, for the one step from the Root its Root grew from, run by `psql` connected to the new database with the variables `from_database` and `from_root`, and write files only in the folder it is run in | New | unit check `migration`: `root.migration-protocol`, `root.migration-protocol-refusal`, `root.migration-whole`, `root.migration-origin`; private Build integration `root.private-sql-builds` (SYL-184). Runtime: `roots.sql-selection`, `roots.sql-preflight`, `roots.sql-pruning`, `roots.sql-databases`, `roots.migrate`, `roots.migrate-failure`, `roots.migrate-refusal`, `roots.migrate-interruption`, `roots.migrate-signals`; explicit installed-server `roots.runtime-sql` (SYL-185) |
-| RTM-1.7 | read the older database only in one transaction that is `REPEATABLE READ` and `READ ONLY` | Changed | unit check `migration`: `root.migration-protocol`, `root.migration-protocol-refusal`, `root.migration-whole` (validated READ ONLY/REPEATABLE READ source protocol, server-side write refusal and unchanged source rows/schema; SYL-184) |
-| RTM-1.8 | write the new database in one transaction, so that a failure leaves no row there | Changed | unit check `migration`: `root.migration-whole` (one destination transaction, missing-source and missing-table status 3, no target rows), `root.migration-protocol-refusal`; runtime rollback/status/preparing behavior: `roots.migrate-failure` and explicit installed-server `roots.runtime-sql` (SYL-185); real-Root drill remains SYL-189 |
-| RTM-1.9 | copy every row of a table that did not change, with the same identifiers and every text and `jsonb` value as it was, except as RTM-1.10 says | Changed | unit check `migration`: `root.migration-fixture`, `root.migration-whole`, `root.migration-text-fault` (all five unchanged tables, identifiers, Unicode/CRLF/tab/backslash/trailing spaces and nested JSON; SYL-184) |
-| RTM-1.10 | write every Exchange that was open at the snapshot as `interrupted`, ended at the time of the snapshot, and start nothing | New | unit check `migration`: `root.migration-whole`, `root.migration-open-fault`, `root.migration-snapshot-fault` (matching interruption/snapshot interval, source unchanged; SYL-184). A running original process staying in its Root is a SYL-189 drill |
-| RTM-1.11 | write one row of `migrated_chats` for every chat it brings over | New | unit check `migration`: `root.migration-whole`, `root.migration-provenance-fault` (one row per chat, from_root/from_chat/ended_through and shared snapshot; SYL-184) |
+| RTM-1.7 | read the older database only in one transaction that is `REPEATABLE READ` and `READ ONLY` | Changed | unit check `migration`: `root.migration-protocol`, `root.migration-protocol-refusal`, `root.migration-whole` (validated READ ONLY/REPEATABLE READ source protocol, server-side write refusal and unchanged source rows/schema; SYL-184) Installed `sapling.jensen-failure` and `sapling.jensen-open-exchange` retain repeatable read-only source fingerprints and unchanged original rows (SYL-189). |
+| RTM-1.8 | write the new database in one transaction, so that a failure leaves no row there | Changed | unit check `migration`: `root.migration-whole` (one destination transaction, missing-source and missing-table status 3, no target rows), `root.migration-protocol-refusal`; runtime rollback/status/preparing behavior: `roots.migrate-failure` and explicit installed-server `roots.runtime-sql` (SYL-185); installed `sapling.jensen-failure` observes the owned source COPY, loses its connection during a complete service shutdown, returns status 1/database_unavailable, leaves Jensen preparing/empty and Sapling unchanged/current, restores the service/removes the copy folder; `sapling.jensen-open-exchange` then succeeds (SYL-189) |
+| RTM-1.9 | copy every row of a table that did not change, with the same identifiers and every text and `jsonb` value as it was, except as RTM-1.10 says | Changed | unit check `migration`: `root.migration-fixture`, `root.migration-whole`, `root.migration-text-fault` (all five unchanged tables, identifiers, Unicode/CRLF/tab/backslash/trailing spaces and nested JSON; SYL-184) Installed `sapling.jensen-open-exchange` compares all 45 chats and every unchanged encoded row at the held saved checkpoint, plus exact prescribed open-Exchange changes (SYL-189). |
+| RTM-1.10 | write every Exchange that was open at the snapshot as `interrupted`, ended at the time of the snapshot, and start nothing | New | unit check `migration`: `root.migration-whole`, `root.migration-open-fault`, `root.migration-snapshot-fault` (matching interruption/snapshot interval, source unchanged; SYL-184). Installed `sapling.jensen-open-exchange` preserves the live accepted Root/Exchange/chat/Trunk/Build and PID/start/group in Sapling; only its copied row is interrupted at the shared snapshot, then the original completes in Sapling while Jensen stays unchanged (SYL-189) |
+| RTM-1.11 | write one row of `migrated_chats` for every chat it brings over | New | unit check `migration`: `root.migration-whole`, `root.migration-provenance-fault` (one row per chat, from_root/from_chat/ended_through and shared snapshot; SYL-184) Installed `sapling.jensen-open-exchange` verifies all 45 provenance rows, source identity, ended_through and one shared in-interval snapshot (SYL-189). |
 
 RTM-1.1 and RTM-1.2 are checked by the tests of `scripts/build.py` in the check `unit`, because a build that fails runs no check; `arbol-builds` checks its own `--root` (BLD-0).
 

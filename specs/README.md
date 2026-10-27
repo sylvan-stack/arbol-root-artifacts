@@ -11,8 +11,8 @@ Conventions (shape of a specification, requirement identifiers, origin, checks, 
 
 | Spec | Title | Status |
 |---|---|---|
-| [RTM-0](00-the-commands.md) | The commands | accepted |
-| [RTM-1](01-builds-layouts-and-migration.md) | Builds, layouts and migration | accepted |
+| [RTM-0](00-the-commands.md) | The commands | implemented |
+| [RTM-1](01-builds-layouts-and-migration.md) | Builds, layouts and migration | implemented |
 
 ## Where the architecture's requirements of the Root manager are carried
 
