@@ -220,6 +220,12 @@ arbol-root:src/arbol_root/listing.py#project
 arbol-root:tests/test_listing.py#Listing
 -->
 
+<!-- sources:
+arbol-root:roots/sapling/drills/trunk_drills.py#hangs
+arbol-root:roots/sapling/drills/trunk_drill_support.py#verify_process
+arbol-root:roots/sapling/drills/trunk_drill_support.py#Exchange.gone
+-->
+
 ## Requirements
 
 A Trunk:
@@ -229,7 +235,7 @@ A Trunk:
 | RCT-1.1 | keep one folder for each Exchange at `exchanges/<exchange>/` in its Root's folder, with the mode 0700 and files of the mode 0600, make it under the name `.<exchange>.new` and rename it into place only when `record.json`, `events.jsonl` and `control` are in it, and remove it by renaming it to `.<exchange>.old` before deleting it | New | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Folder` (SYL-171) |
 | RCT-1.2 | write `record.json` in the form of `ExchangeRecord`, replace it only by renaming a whole file over it, and never change `root`, `exchange`, `chat`, `trunk`, `build`, `process`, `route`, `smallCallRoute` or `workingFolder` after the first record | New | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Folder.test_the_record_is_replaced_whole_and_who_runs_it_never_changes` (SYL-171) |
 | RCT-1.3 | raise `signsOfLife.heartbeat` from the loop that does its work at least every 10 seconds and rewrite the record each time, keep `waitingFor` and `since` true, giving the first that holds of `answer`, `tool`, `driver`, `small-call` and `database`, and give no wait in that loop more than 5 seconds | New | contract: R6 (SYL-176); unit: `Heartbeat`, `Waiting`, `RoundsWithLife` and `TimeScaledWaits` in `trunks/trivial/tests/` of `arbol-trunk` |
-| RCT-1.4 | end its process group, with SIGTERM and 5 seconds later SIGKILL, and write nothing, when its work has not raised the heartbeat for 60 seconds, counted with `CLOCK_UPTIME_RAW` by a part of its process that does nothing else | New | contract: R7 (SYL-176); unit: `Watching`, `EndingTheGroup`, `WatchLifetime`, `DeliberateHang` and `Termination` in `trunks/trivial/tests/` of `arbol-trunk`; drill remains SYL-187 |
+| RCT-1.4 | end its process group, with SIGTERM and 5 seconds later SIGKILL, and write nothing, when its work has not raised the heartbeat for 60 seconds, counted with `CLOCK_UPTIME_RAW` by a part of its process that does nothing else | New | contract: R7 (SYL-176); unit: `Watching`, `EndingTheGroup`, `WatchLifetime`, `DeliberateHang` and `Termination` in `trunks/trivial/tests/` of `arbol-trunk`; installed real-scale drill `sapling.trunk-hangs` (SYL-187) |
 | RCT-1.5 | append every event of the agent's Driver runs to `events.jsonl` exactly as the Driver wrote it, except as RCT-1.6 and RCT-1.12 say, in a line `{"n", "event"}` with `n` counting from 1 without gaps, each line whole with one write, before it saves anything that comes from it, and the end as the last line | New | contract: R1 (SYL-171); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Events` (SYL-171) |
 | RCT-1.11 | append each `answer` line it hands to a run as `{"n", "answer"}`, and the `finished` event of each small call's run as `{"n", "smallRun"}`, and nothing else of a small call | New | contract: R19 for the small calls (SYL-171), R9 for the answers (SYL-173); also the Trivial Trunk's unit tests in `trunks/trivial/tests/` of `arbol-trunk`: `Answers` (SYL-173) |
 | RCT-1.6 | when the next line would take `events.jsonl` past 256 MiB, stop its run, end the Exchange as failed with `events_file_full`, and from then on write only closing lines whose start is in the file, `usage`, `finished`, `smallRun` and the end | New | contract: R15.whole_file (SYL-178), at the real 256 MiB cap; unit: `Events.test_a_full_file_keeps_only_closures_of_written_starts_usage_finished_and_the_end`, `StoppingTheRun.test_a_full_file_sends_the_same_stop_and_kills_a_driver_that_does_not_end`, and `WholeExchange.test_a_full_file_fails_the_exchange_and_keeps_only_rows_from_written_lines`, in `trunks/trivial/tests/` of `arbol-trunk` |
