@@ -9,6 +9,16 @@ The *chat tables* are the tables of a Root's database that hold its chats: every
 
 It follows the conventions of the [Driver Contract](../../arbol/driver-contract/README.md#conventions) and the additions in this chapter's [README](README.md#conventions). The owner decided on 15 October 2026 what a chat keeps ([RCT-D21](#decisions)) and that the layout is a plain file of SQL ([RCT-D22](#decisions)). The owner answered the open questions on 15 October 2026, among them that the answer a message sent again replaces is deleted ([RCT-D16](02-starting-stopping-and-settling.md#decisions)), and the specification was accepted the same day. Contract version 1 holds only what the first thin path through every part needs ([ARC-1](../../arbol/architecture/01-roots.md#what-is-built-first), ARC-D39): one message sent, its answer streamed and saved, the chat opened again, and the chat migrated into a second Root.
 
+## Session import amendment
+
+For [IMP-0](../../arbol/session-import/00-the-import.md), accepted on 18 November 2026, Arbol imports the saved sessions of Claude Code, Codex, Kimi Code, Pi and Mimo as read-only, archived chats. For this specification:
+
+- *The tables*: the importer is a further named writer exception, next to the chat title (ARC-D10). It is the only writer of `chat_imports` and `exchange_imports`, which sit beside the chat tables and are not chat tables, since no Trunk writes them ([IMP-0 Provenance](../../arbol/session-import/00-the-import.md#provenance)).
+- *Additions*: revision 3 is an additive migration of the installation's migration sequence, which RCT-3.6 gives way to under the Single-database amendment, so it keeps schema compatibility version 1. Its insert trigger on `exchanges` refuses a new Exchange for an imported chat with `imported_chat`, which a Trunk that does not know the code reports as `database_unavailable`. The trigger lets through only transactions that set `arbol.importing` to `on`, as the importer's own do, so that importing a session again can add its new turns (IMP-0.11, IMP-0.14, IMP-0.16).
+- *How lines become rows*: an imported Exchange is written by the importer, not from `events.jsonl`. It carries Trunk `imported` with Build `0`, one run `<exchange>.import` with no `started`, and the route of [IMP-0 From a session to a chat](../../arbol/session-import/00-the-import.md#from-a-session-to-a-chat).
+
+This amendment applies from migration revision 3 and the `arbol` Build that declares `minRevision: 3`. The prior text, IDs and Decisions below keep their original scope.
+
 ## Scope
 
 Covered: the layout file and how programs talk to the database, the five tables, who writes what and when, how lines become rows, how a chat is read, columns and `jsonb`, additions.
